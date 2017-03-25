@@ -1,0 +1,16 @@
+[package]
+name = "ml"
+version = "0.1.0"
+authors = ["adjivas <adjivas@users.noreply.github.com>"]
+
+[dependencies.syntex_syntax]
+version = "0.58.1"
+
+[dependencies.syntex_errors]
+version = "0.58.1"
+
+[dependencies.rustc-serialize]
+version = "0.3.22"
+
+[dependencies.dot]
+version = "0.1.2"
