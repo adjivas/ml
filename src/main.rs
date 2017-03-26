@@ -3,6 +3,7 @@
 
 extern crate syntex_syntax as syntax;
 extern crate syntex_errors;
+extern crate itertools;
 extern crate dot;
 
 use std::{slice, iter, fmt};
@@ -17,8 +18,9 @@ use syntax::codemap::CodeMap;
 use syntax::print::pprust::{ty_to_string, arg_to_string};
 use syntex_errors::Handler;
 use syntex_errors::emitter::ColorConfig;
-
 use syntax::parse::{self, ParseSess};
+
+use itertools::Itertools;
 
 #[derive(Debug, Clone)]
 struct Item <'a> {
@@ -37,21 +39,21 @@ impl <'a>Iterator for Item<'a> {
     type Item = ItemState<'a>;
 
     fn next(&mut self) -> Option<ItemState<'a>> {
-        if self.it.peek().is_none() {
-            None
-        } else {
-            let mut list: Vec<&'a syntax::ptr::P<syntax::ast::Item>> = Vec::new();
+        self.it.next().and_then(|item| {
+            let mut list: Vec<&'a syntax::ptr::P<syntax::ast::Item>> = vec!(item);
 
-            while let Some(item) = self.it.next() {
-                list.push(item);
-                if let Some(&syntax::ast::ItemKind::Impl(_, _, _, _, _, _)) = self.it.peek().and_then(|item| Some(&item.node)) {
-                    continue ;
-                } else {    
-                    break ;
-                }
-            }
+            list.extend(
+                self.it.peeking_take_while(|ref item| {
+                    if let syntax::ast::ItemKind::Impl(_, _, _, _, _, _) = item.node {
+                        true
+                    } else {    
+                        false
+                    }
+                })
+                .collect::<Vec<&'a syntax::ptr::P<syntax::ast::Item>>>()
+            );
             Some(ItemState::from(list))
-        }
+        })
     }
 }
 
@@ -149,23 +151,24 @@ impl <'a>fmt::Display for Node<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             &Node::Trait(_, _, _, _) => write!(f, ""),
-            &Node::Struct(_, ref name, ref struct_field) => write!(f, "Structure|{name}|{struct_field}",
+            &Node::Struct(_, ref name, ref struct_field) => write!(f, "&lt;&lt;&lt;Structure&gt;&gt;&gt;|{name}|{struct_field}",
                 name = name,
-                struct_field =
+                struct_field = dot::escape_html(
                     struct_field.iter()
                                 .map(|&(ref vis, ref name, ref ty): &(&syntax::ast::Visibility, syntax::symbol::InternedString, String)| {
                                     if syntax::ast::Visibility::Public.eq(vis) {
-                                        format!("+ {}<{}>", name, ty)
+                                        format!("+ {}&lt;{}&gt;", name, ty)
                                     } else {
-                                        format!("- {}<{}>", name, ty)
+                                        format!("- {}&lt;{}&gt;", name, ty)
                                     }
                                 })
                                 .collect::<Vec<String>>()
-                                .join("\n"),
+                                .join("\n")
+                                .as_str()),
             ),
-            &Node::Enum(_, ref name, _, ref variants) => write!(f, "Enumeration|{name}|{variants}",
+            &Node::Enum(_, ref name, _, ref variants) => write!(f, "&lt;&lt;&lt;Enumeration&gt;&gt;&gt;|{name}|{variants}",
                 name = name,
-                variants =
+                variants = dot::escape_html(
                     variants.iter()
                             .map(|&(ref name, ref struct_field): &(syntax::symbol::InternedString, Vec<String>)| {
                                  if struct_field.is_empty() {
@@ -175,7 +178,8 @@ impl <'a>fmt::Display for Node<'a> {
                                  }
                             })
                             .collect::<Vec<String>>()
-                            .join("\n"),
+                            .join("\n")
+                            .as_str()),
             ),
             &Node::None => Err(fmt::Error),
         }
@@ -294,13 +298,13 @@ impl <'a>fmt::Display for ItemState<'a> {
                         methods.iter().map(|&(ref vis, ref name, ref ty, ref inputs)| {
                             match (vis, ty) {
                                 (&&syntax::ast::Visibility::Public, &Some(ref ty)) => {
-                                    format!("+ fn {}({}) -> {}", name, inputs.iter().map(|arg| arg.to_string()).collect::<Vec<String>>().join(", "), ty)
+                                    format!("+ fn {}({}) -&gt; {}", name, inputs.iter().map(|arg| arg.to_string()).collect::<Vec<String>>().join(", "), ty)
                                 },
                                 (&&syntax::ast::Visibility::Public, &None) => {
                                     format!("+ fn {}({})", name, inputs.iter().map(|arg| arg.to_string()).collect::<Vec<String>>().join(", "))
                                 },
                                 (_, &Some(ref ty)) => {
-                                    format!("- fn {}({}) -> {}", name, inputs.iter().map(|arg| arg.to_string()).collect::<Vec<String>>().join(", "), ty)
+                                    format!("- fn {}({}) -&gt; {}", name, inputs.iter().map(|arg| arg.to_string()).collect::<Vec<String>>().join(", "), ty)
                                 },
                                 (_, &None) => {
                                     format!("- fn {}({})", name, inputs.iter().map(|arg| arg.to_string()).collect::<Vec<String>>().join(", "))
