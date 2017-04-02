@@ -13,6 +13,7 @@ use std::ops::Deref;
 use std::ops::Not;
 use std::borrow::Cow;
 use std::fs::File;
+use std::vec;
 
 use syntax::codemap::CodeMap;
 use syntax::print::pprust::{ty_to_string, arg_to_string};
@@ -57,7 +58,7 @@ impl <'a>Iterator for Item<'a> {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 enum Node <'a> {
     Trait(&'a syntax::ast::Visibility, syntax::symbol::InternedString, Vec<syntax::symbol::InternedString>, Vec<(syntax::symbol::InternedString, Vec<String>, String)>),
     Struct(&'a syntax::ast::Visibility, syntax::symbol::InternedString, Vec<(&'a syntax::ast::Visibility, syntax::symbol::InternedString, String)>),
@@ -72,6 +73,35 @@ impl <'a> Node <'a> {
             &Node::Struct(_, ref name, _) => Ok(name),
             &Node::Enum(_, ref name, _, _) => Ok(name),
             &Node::None => unreachable!(),
+        }
+    }
+}
+
+impl<'a> IntoIterator for &'a Node<'a> {
+    type Item = &'a String;
+    type IntoIter = vec::IntoIter<&'a String>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        match self {
+            &Node::Struct(_, _, ref ty_field) => {
+                    ty_field.iter()
+                        .map(|&(_, _, ref ty): &'a (&'a syntax::ast::Visibility, syntax::symbol::InternedString, std::string::String)| ty)
+                        .collect::<Vec<&'a String>>()
+                        .into_iter()
+            },
+            &Node::Enum(_, _, _, ref ty_multi_field) => {
+                    ty_multi_field.iter()
+                        .map(|&(_, ref ty_field): &'a (syntax::symbol::InternedString, Vec<String>)| 
+                             ty_field.iter()
+                                     .map(|ty: &'a String| ty)
+                                     .collect::<Vec<&'a String>>())
+                        .collect::<Vec<Vec<&'a String>>>()
+                        .concat()
+                        .into_iter()
+            },
+            _ => {
+                Vec::default().into_iter()
+            },
         }
     }
 }
@@ -116,7 +146,8 @@ impl <'a>From<(&'a syntax::ast::Item, &'a Vec<syntax::ast::StructField>)> for No
             item.ident.name.as_str(),
             struct_field.iter()
                         .filter_map(|&syntax::ast::StructField { span: _, ident, ref vis, id: _, ref ty, .. }|
-                            ident.and_then(|syntax::ast::Ident {name, ..}| Some((vis, name.as_str(), ty_to_string(&ty)))))
+                                ident.and_then(|syntax::ast::Ident {name, ..}|
+                                    Some((vis, name.as_str(), ty_to_string(&ty)))))
                         .collect::<Vec<(&syntax::ast::Visibility, syntax::symbol::InternedString, String)>>()
         )
     }
@@ -157,9 +188,9 @@ impl <'a>fmt::Display for Node<'a> {
                     struct_field.iter()
                                 .map(|&(ref vis, ref name, ref ty): &(&syntax::ast::Visibility, syntax::symbol::InternedString, String)| {
                                     if syntax::ast::Visibility::Public.eq(vis) {
-                                        format!("+ {}&lt;{}&gt;", name, ty)
+                                        format!("+ {}: {}", name, ty)
                                     } else {
-                                        format!("- {}&lt;{}&gt;", name, ty)
+                                        format!("- {}: {}", name, ty)
                                     }
                                 })
                                 .collect::<Vec<String>>()
@@ -174,7 +205,7 @@ impl <'a>fmt::Display for Node<'a> {
                                  if struct_field.is_empty() {
                                      format!("{}", name)
                                  } else {
-                                     format!("{} : {}", name, struct_field.concat())
+                                     format!("{}({})", name, struct_field.join(", "))
                                  }
                             })
                             .collect::<Vec<String>>()
@@ -186,7 +217,7 @@ impl <'a>fmt::Display for Node<'a> {
     }
 }
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, Eq, PartialEq)]
 pub struct ItemState<'a> {
     /// Data Type.
     node: Node<'a>,
@@ -203,6 +234,18 @@ impl <'a> ItemState <'a> {
 
     pub fn as_name(&self) -> Result<&syntax::symbol::InternedString, !> {
         self.node.as_name()
+    }
+
+    pub fn partial_association(&self, rhs: &ItemState<'a>) -> bool {
+        let name: String = self.as_name().unwrap().to_string();
+
+        rhs.node.into_iter()
+                .position(|attribut: &String| {
+                    // DOTO
+                    println!("{} => \"{}\" <=> \"{}\"", attribut.eq(&name), attribut, name);
+                    attribut.starts_with(&name)
+                })
+                .is_some()
     }
 }
 
@@ -291,11 +334,13 @@ impl <'a>From<Vec<&'a syntax::ptr::P<syntax::ast::Item>>> for ItemState<'a> {
 impl <'a>fmt::Display for ItemState<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if self.method.is_empty() {
-            write!(f, "{{{}}}", self.node)
+            write!(f, "{{{node}}}", node = self.node)
         } else {
-            write!(f, "{{{}|{}}}", self.node,
-                self.method.iter().map(|ref methods| {
-                        methods.iter().map(|&(ref vis, ref name, ref ty, ref inputs)| {
+            write!(f, "{{{node}|{method}}}",
+                node = self.node,
+                method = dot::escape_html(
+                    self.method.iter().map(|ref methods|
+                        methods.iter().map(|&(ref vis, ref name, ref ty, ref inputs)|
                             match (vis, ty) {
                                 (&&syntax::ast::Visibility::Public, &Some(ref ty)) => {
                                     format!("+ fn {}({}) -&gt; {}", name, inputs.iter().map(|arg| arg.to_string()).collect::<Vec<String>>().join(", "), ty)
@@ -310,10 +355,10 @@ impl <'a>fmt::Display for ItemState<'a> {
                                     format!("- fn {}({})", name, inputs.iter().map(|arg| arg.to_string()).collect::<Vec<String>>().join(", "))
                                 },
                             }
-                        })
+                        )
                         .collect::<Vec<String>>().join("\n")
-                })
-                .collect::<Vec<String>>().join("\n"))
+                )
+                .collect::<Vec<String>>().join("\n").as_str()))
         }
     }
 }
@@ -335,12 +380,7 @@ impl <'a>Iterator for ListItem<'a> {
     type Item = ItemState<'a>;
 
     fn next(&mut self) -> Option<ItemState<'a>> {
-        while let Some(state) = self.parse.next() {
-            if state.is_none().not() {
-                return Some(state);
-            }
-        }
-        None
+        self.parse.by_ref().skip_while(|state| state.is_none()).next()
     }
 }
 
@@ -370,7 +410,17 @@ impl<'a> dot::GraphWalk<'a, ItemState<'a>, (ItemState<'a>, ItemState<'a>)> for L
     }
     
     fn edges(&'a self) -> dot::Edges<'a, (ItemState<'a>, ItemState<'a>)> {
-        Cow::Borrowed(&[])
+        let items = self.clone().collect::<Vec<ItemState<'a>>>();
+
+        Cow::Owned(items.iter()
+                        .map(|item|
+                             items.iter()
+                                  .filter(|rhs| item.ne(rhs))
+                                  .filter(|rhs| item.partial_association(rhs))
+                                  .map(|rhs| (item.clone(), rhs.clone()))
+                                  .collect::<Vec<(ItemState<'a>, ItemState<'a>)>>())
+                        .collect::<Vec<Vec<(ItemState<'a>, ItemState<'a>)>>>()
+                        .concat())
     }
 
     fn source(&self, e: &(ItemState<'a>, ItemState<'a>)) -> ItemState<'a> { let &(ref s, _) = e; s.clone() }
