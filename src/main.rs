@@ -6,14 +6,16 @@ extern crate syntex_errors;
 extern crate itertools;
 extern crate dot;
 
-use std::{slice, iter, fmt};
+use std::{slice, iter};
 use std::path::Path;
 use std::rc::Rc;
 use std::ops::Deref;
 use std::borrow::Cow;
 use std::fs::File;
-use std::vec;
 use std::ops::BitOr;
+use std::ops::Not;
+use std::fmt;
+use std::vec;
 
 use syntax::codemap::CodeMap;
 use syntax::print::pprust::{ty_to_string, arg_to_string};
@@ -73,6 +75,13 @@ impl <'a> Node <'a> {
             &Node::Struct(_, ref name, _) => Ok(name),
             &Node::Enum(_, ref name, _, _) => Ok(name),
             &Node::None => unreachable!(),
+        }
+    }
+    
+    pub fn is_trait(&self) -> bool {
+        match self {
+            &Node::Trait(_, _, _, _) => true,
+            _ => false,
         }
     }
 }
@@ -167,8 +176,8 @@ impl <'a>From<(&'a syntax::ast::Item, &'a Vec<syntax::ast::TyParam>, &'a Vec<syn
                     if let &syntax::ast::VariantData::Tuple(ref struct_field, _) = data {
                         (name.as_str(),
                          struct_field.iter()
-                                    .filter_map(|&syntax::ast::StructField { span: _, ident: _, vis: _, id: _, ref ty, .. }| Some(ty_to_string(&ty)))
-                                    .collect::<Vec<String>>())
+                                     .filter_map(|&syntax::ast::StructField { span: _, ident: _, vis: _, id: _, ref ty, .. }| Some(ty_to_string(&ty)))
+                                     .collect::<Vec<String>>())
                     } else {
                         (name.as_str(), Vec::new())
                     }
@@ -220,16 +229,43 @@ impl <'a>fmt::Display for Node<'a> {
 #[derive(Default, Debug, Clone, Eq, PartialEq)]
 pub struct Method <'a> {
     /// visibility, method's name, arguments, result.
-    func: Vec<(&'a syntax::ast::Visibility, syntax::symbol::InternedString, std::vec::Vec<String>, Option<String>)>
+    func: Vec<(&'a syntax::ast::Visibility, syntax::symbol::InternedString, Vec<String>, Option<String>)>
 }
 
 impl <'a> Method <'a> {
-    pub fn association(&'a self, name: &String) -> bool {
+    pub fn is_association(&self, ty_name: &String) -> bool {
         self.func.iter()
                  .any(|&(_, _, _, ref result): &(&'a syntax::ast::Visibility, syntax::symbol::InternedString, std::vec::Vec<String>, Option<String>)|
                      if let &Some(ref ret) = result {
                          ret.split(|at| "<[(;, )]>".contains(at))
-                            .any(|ty| name.eq(ty))
+                            .any(|ty| ty.eq(ty_name))
+                     } else {
+                         false
+                     }
+                 )
+    }
+
+    pub fn is_dependency(&self, name: &String) -> bool {
+        let mut ty_name: String = String::from(" ");
+        
+        ty_name.push_str(name);
+        self.func.iter()
+                 .any(|&(_, _, _, ref result): &(&'a syntax::ast::Visibility, syntax::symbol::InternedString, std::vec::Vec<String>, Option<String>)|
+                     if let &Some(ref ret) = result {
+                         ret.split(|at| "<[(;,)]>".contains(at))
+                            .any(|ty| ty.ends_with(&ty_name))
+                     } else {
+                         false
+                     }
+                 )
+    }
+
+    pub fn is_relation(&'a self, ty_name: &String) -> bool {
+        self.func.iter()
+                 .any(|&(_, _, _, ref result): &(&'a syntax::ast::Visibility, syntax::symbol::InternedString, std::vec::Vec<String>, Option<String>)|
+                     if let &Some(ref ret) = result {
+                         ret.split(|at| "<[(;, )]>".contains(at))
+                            .any(|ty| ty_name.eq(ty))
                      } else {
                          false
                      }
@@ -245,6 +281,25 @@ impl <'a> From<Vec<(&'a syntax::ast::Visibility, syntax::symbol::InternedString,
     }
 }
 
+impl <'a> From<&'a Vec<syntax::ast::ImplItem>> for Method<'a> {
+    fn from(impl_item: &'a Vec<syntax::ast::ImplItem>) -> Method<'a> {
+        Method::from(impl_item.iter()
+                              .filter_map(|&syntax::ast::ImplItem {id: _, ident: syntax::ast::Ident { name, ..}, ref vis, defaultness: _, attrs: _, ref node, .. }| {
+                                     if let &syntax::ast::ImplItemKind::Method(syntax::ast::MethodSig {unsafety: _, constness: _, abi: _, ref decl, ..}, _) = node {
+                                         if let &syntax::ast::FnDecl {ref inputs, output: syntax::ast::FunctionRetTy::Ty(ref ty), ..} = decl.deref() {
+                                             Some((vis, name.as_str(), inputs.iter().map(|ref arg| arg_to_string(&arg)).collect::<Vec<String>>(), Some(ty_to_string(&ty))))
+                                         } else if let &syntax::ast::FnDecl {ref inputs, output: syntax::ast::FunctionRetTy::Default(_), ..} = decl.deref() {
+                                             Some((vis, name.as_str(), inputs.iter().map(|ref arg| arg_to_string(&arg)).collect::<Vec<String>>(), None))
+                                         } else {
+                                             None
+                                         }
+                                     } else {
+                                         None
+                                     }
+                               })
+                               .collect::<Vec<(&'a syntax::ast::Visibility, syntax::symbol::InternedString, Vec<String>, Option<String>)>>())
+    }
+}
 
 impl <'a>fmt::Display for Method<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -278,12 +333,12 @@ pub struct Implem {
 }
 
 impl Implem {
-    pub fn association(&self, name: &String) -> bool {
+    pub fn is_realization(&self, ty_name: &String) -> bool {
         self.func.iter()
                  .any(|&(_, _, ref result): &(syntax::symbol::InternedString, Vec<String>, Option<String>)|
                       if let &Some(ref ret) = result {
                           ret.split(|at| "<[(;, )]>".contains(at))
-                             .any(|ty| name.eq(ty))
+                             .any(|ty| ty_name.eq(ty))
                       } else {
                           false
                       }
@@ -300,6 +355,38 @@ impl From<(Vec<(syntax::symbol::InternedString, Vec<String>)>, Vec<(syntax::symb
     }
 }
 
+impl <'a> From<(&'a Vec<syntax::ast::PathSegment>, &'a Vec<syntax::ast::ImplItem>)> for Implem {
+    fn from((segments, impl_item): (&'a Vec<syntax::ast::PathSegment>, &'a Vec<syntax::ast::ImplItem>)) -> Implem {
+        Implem::from((segments.iter()
+                              .map(|&syntax::ast::PathSegment { identifier: syntax::ast::Ident {name, ..}, ref parameters }| {
+                                  if let &Some(ref path) = parameters {
+                                      if let &syntax::ast::PathParameters::AngleBracketed(
+                                          syntax::ast::AngleBracketedParameterData { lifetimes: _, ref types, .. }
+                                      ) = path.deref() {
+                                          (name.as_str(), types.iter().map(|ty| ty_to_string(&ty)).collect::<Vec<String>>())
+                                      } else {
+                                          (name.as_str(), Vec::new())
+                                      }
+                                  } else {
+                                      (name.as_str(), Vec::new())
+                                  }
+                              })
+                              .collect::<Vec<(syntax::symbol::InternedString, Vec<String>)>>(),
+                              impl_item.iter()
+                                       .filter_map(|&syntax::ast::ImplItem { id: _, ident: syntax::ast::Ident {name, ..}, vis: _, defaultness: _, attrs: _, ref node, ..}|
+                                                 if let &syntax::ast::ImplItemKind::Method(syntax::ast::MethodSig { unsafety: _, constness: _, abi: _, ref decl, .. }, _) = node {
+                                                     if let syntax::ast::FunctionRetTy::Ty(ref ty) = decl.output {
+                                                         Some((name.as_str(), decl.inputs.iter().map(|arg| ty_to_string(&arg.ty)).collect::<Vec<String>>(), Some(ty_to_string(&ty))))
+                                                     } else {
+                                                         Some((name.as_str(), decl.inputs.iter().map(|arg| ty_to_string(&arg.ty)).collect::<Vec<String>>(), None))
+                                                     }
+                                                 } else {
+                                                     None
+                                                 }
+                              ).collect::<Vec<(syntax::symbol::InternedString, Vec<String>, Option<String>)>>()))
+    }
+}
+
 #[derive(Default, Debug, Clone, Eq, PartialEq)]
 pub struct ItemState<'a> {
     /// Data Type.
@@ -311,28 +398,142 @@ pub struct ItemState<'a> {
 }
 
 impl <'a> ItemState <'a> {
+
     pub fn is_none(&self) -> bool {
         self.node.eq(&Node::None)
+    }
+
+    pub fn is_association(&self, rhs: &ItemState<'a>) -> bool {
+        match self.as_name() {
+            Ok(name) => {
+                let ref ty_name: String = name.to_string();
+
+                rhs.method.iter()
+                          .any(|func| func.is_association(ty_name))
+            }
+        }
+    }
+
+    pub fn is_dependency(&self, rhs: &ItemState<'a>) -> bool {
+        match self.as_name() {
+            Ok(name) => {
+                let ref ty_name: String = name.to_string();
+
+                rhs.method.iter()
+                          .any(|func| func.is_dependency(ty_name))
+            }
+        }
+    }
+
+    pub fn is_aggregation(&self, rhs: &ItemState<'a>) -> bool {
+        match self.as_name() {
+            Ok(name) => {
+                let mut ty_name: String = String::from("* ");
+                
+                ty_name.push_str(&name);
+                rhs.node.into_iter()
+                        .any(|attribut: &String|
+                              attribut.split(|at| "<[(;,)]>".contains(at))
+                                      .filter(|ty| ty.is_empty().not())
+                                      .any(|ty| ty_name.ends_with(ty)))
+            }
+        }
+    }
+
+    pub fn is_composition(&self, rhs: &ItemState<'a>) -> bool {
+        match self.as_name() {
+            Ok(name) => {
+                let ty_name: String = name.to_string();
+
+                rhs.node.into_iter()
+                        .any(|attribut: &String|
+                              attribut.split(|at| "<[(;, )]>".contains(at))
+                                      .any(|ty| ty.eq(&ty_name)))
+            }
+        }
+    }
+
+    pub fn is_realization(&self, rhs: &ItemState<'a>) -> bool {
+        match self.as_name() {
+            Ok(name) => {
+                let ty_name: String = name.to_string();
+        
+                rhs.implem.iter()
+                          .any(|implem| implem.is_realization(&ty_name))
+            }
+        }
+    }
+
+    pub fn is_relation(&self, rhs: &ItemState<'a>) -> bool {
+        match self.as_name() {
+            Ok(name) => {
+                let ty_name: String = name.to_string();
+        
+                rhs.node.into_iter()
+                        .any(|attribut: &String|
+                              attribut.split(|at| "<[(;, )]>".contains(at))
+                                      .any(|ty| ty_name.eq(ty)))
+                        .bitor(rhs.method.iter()
+                                  .any(|func| func.is_relation(&ty_name)))
+                        .bitor(rhs.implem.iter()
+                                  .any(|implem| implem.is_realization(&ty_name)))
+            }
+        }
     }
 
     pub fn as_name(&self) -> Result<&syntax::symbol::InternedString, !> {
         self.node.as_name()
     }
-    
-    pub fn partial_association(&self, rhs: &ItemState<'a>) -> bool {
-        match self.as_name() {
-            Ok(name) => {
-                let name: String = name.to_string();
-        
-                rhs.node.into_iter()
-                          .any(|attribut: &String|
-                               attribut.split(|at| "<[(;, )]>".contains(at))
-                                       .any(|ty| name.eq(ty)))
-                          .bitor(rhs.method.iter()
-                                     .any(|func| func.association(&name)))
-                          .bitor(rhs.implem.iter()
-                                    .any(|implem| implem.association(&name)))
-            }
+
+    pub fn as_arrow(&self, rhs: &ItemState<'a>) -> Relation {
+        Relation::from((self, rhs))
+    }
+
+    pub fn as_style(&self) -> dot::Style {
+        if self.node.is_trait() {
+            dot::Style::Dashed
+        } else {
+            dot::Style::Solid
+        }
+    }
+}
+
+pub enum Relation {
+    Association,
+    Aggregation,
+    Composition,
+    Realization,
+    Dependency,
+    None,
+}
+
+impl Relation {
+    pub fn as_style(&self) -> dot::ArrowShape {
+        match self {
+            &Relation::Association => dot::ArrowShape::Vee(dot::Side::Both),
+            &Relation::Dependency => dot::ArrowShape::Normal(dot::Fill::Filled, dot::Side::Both),
+            &Relation::Aggregation => dot::ArrowShape::Diamond(dot::Fill::Open, dot::Side::Both),
+            &Relation::Composition => dot::ArrowShape::Diamond(dot::Fill::Filled, dot::Side::Both),
+            &Relation::Realization => dot::ArrowShape::Normal(dot::Fill::Open, dot::Side::Both),
+            &Relation::None => dot::ArrowShape::NoArrow,
+        }
+    }
+}
+
+impl <'a>From<(&'a ItemState<'a>, &'a ItemState<'a>)> for Relation {
+    fn from((left, right): (&'a ItemState<'a>, &'a ItemState<'a>)) -> Relation {
+        if left.is_composition(right) {
+            Relation::Composition
+        } else if left.is_aggregation(right) {
+            Relation::Aggregation
+        } else if left.is_dependency(right) {
+            Relation::Dependency
+        } else if left.is_association(right) {
+            Relation::Association
+        } else if left.is_realization(right) {
+            Relation::Realization
+        } else {
+            Relation::None
         }
     }
 }
@@ -344,21 +545,7 @@ impl <'a>From<(Node<'a>, Vec<&'a syntax::ptr::P<syntax::ast::Item>>)> for ItemSt
             method: properties.iter()
                 .filter_map(|item: (&&'a syntax::ptr::P<syntax::ast::Item>)| {
                     if let syntax::ast::ItemKind::Impl(_, _, _, None, _, ref impl_item) = item.node {
-                        Some(Method::from(impl_item.iter()
-                             .filter_map(|&syntax::ast::ImplItem {id: _, ident: syntax::ast::Ident { name, ..}, ref vis, defaultness: _, attrs: _, ref node, .. }| {
-                                    if let &syntax::ast::ImplItemKind::Method(syntax::ast::MethodSig {unsafety: _, constness: _, abi: _, ref decl, ..}, _) = node {
-                                        if let &syntax::ast::FnDecl {ref inputs, output: syntax::ast::FunctionRetTy::Ty(ref ty), ..} = decl.deref() {
-                                            Some((vis, name.as_str(), inputs.iter().map(|ref arg| arg_to_string(&arg)).collect::<Vec<String>>(), Some(ty_to_string(&ty))))
-                                        } else if let &syntax::ast::FnDecl {ref inputs, output: syntax::ast::FunctionRetTy::Default(_), ..} = decl.deref() {
-                                            Some((vis, name.as_str(), inputs.iter().map(|ref arg| arg_to_string(&arg)).collect::<Vec<String>>(), None))
-                                        } else {
-                                            None
-                                        }
-                                    } else {
-                                        None
-                                    }
-                              })
-                              .collect::<Vec<(&'a syntax::ast::Visibility, syntax::symbol::InternedString, Vec<String>, Option<String>)>>()))
+                        Some(Method::from(impl_item))
                     } else {
                         None
                     }
@@ -367,34 +554,7 @@ impl <'a>From<(Node<'a>, Vec<&'a syntax::ptr::P<syntax::ast::Item>>)> for ItemSt
             implem: properties.iter()
                 .filter_map(|item: (&&'a syntax::ptr::P<syntax::ast::Item>)| {
                     if let syntax::ast::ItemKind::Impl(_, _, _, Some(syntax::ast::TraitRef {path: syntax::ast::Path {span: _, ref segments}, ..}), _, ref impl_item) = item.node {
-                        Some(Implem::from((
-                            segments.iter()
-                                .map(|&syntax::ast::PathSegment { identifier: syntax::ast::Ident {name, ..}, ref parameters }| {
-                                    if let &Some(ref path) = parameters {
-                                        if let &syntax::ast::PathParameters::AngleBracketed(
-                                            syntax::ast::AngleBracketedParameterData { lifetimes: _, ref types, .. }
-                                        ) = path.deref() {
-                                            (name.as_str(), types.iter().map(|ty| ty_to_string(&ty)).collect::<Vec<String>>())
-                                        } else {
-                                            (name.as_str(), Vec::new())
-                                        }
-                                    } else {
-                                        (name.as_str(), Vec::new())
-                                    }
-                                })
-                            .collect::<Vec<(syntax::symbol::InternedString, Vec<String>)>>(),
-                            impl_item.iter()
-                                      .filter_map(|&syntax::ast::ImplItem { id: _, ident: syntax::ast::Ident {name, ..}, vis: _, defaultness: _, attrs: _, ref node, ..}|
-                                                if let &syntax::ast::ImplItemKind::Method(syntax::ast::MethodSig { unsafety: _, constness: _, abi: _, ref decl, .. }, _) = node {
-                                                    if let syntax::ast::FunctionRetTy::Ty(ref ty) = decl.output {
-                                                        Some((name.as_str(), decl.inputs.iter().map(|arg| ty_to_string(&arg.ty)).collect::<Vec<String>>(), Some(ty_to_string(&ty))))
-                                                    } else {
-                                                        Some((name.as_str(), decl.inputs.iter().map(|arg| ty_to_string(&arg.ty)).collect::<Vec<String>>(), None))
-                                                    }
-                                                } else {
-                                                    None
-                                                }
-                            ).collect::<Vec<(syntax::symbol::InternedString, Vec<String>, Option<String>)>>())))
+                        Some(Implem::from((segments, impl_item)))
                     } else {
                         None
                     }
@@ -488,6 +648,20 @@ impl<'a> dot::Labeller<'a, ItemState<'a>, (ItemState<'a>, ItemState<'a>)> for Li
     fn node_label(&'a self, state: &ItemState<'a>) -> dot::LabelText<'a> {
         dot::LabelText::LabelStr(format!("{}", state).into())
     }
+
+    fn node_style(&'a self, edge: &ItemState<'a>) -> dot::Style {
+        edge.as_style()
+    }
+
+    fn edge_end_arrow(&'a self, &(ref edge_left, ref edge_right): &(ItemState<'a>, ItemState<'a>)) -> dot::Arrow {
+        match (
+            edge_left.as_arrow(edge_right),
+            edge_right.as_arrow(edge_left)
+        ) {
+            (Relation::Association, Relation::Association) => dot::Arrow::none(),
+            (edge_left, _) => dot::Arrow::from_arrow(edge_left.as_style()),
+        }
+    }
 }
 
 impl<'a> dot::GraphWalk<'a, ItemState<'a>, (ItemState<'a>, ItemState<'a>)> for ListItem<'a> {
@@ -502,7 +676,7 @@ impl<'a> dot::GraphWalk<'a, ItemState<'a>, (ItemState<'a>, ItemState<'a>)> for L
                         .map(|item|
                              items.iter()
                                   .filter(|rhs| item.ne(rhs))
-                                  .filter(|rhs| item.partial_association(rhs))
+                                  .filter(|rhs| item.is_relation(rhs))
                                   .map(|rhs| (item.clone(), rhs.clone()))
                                   .collect::<Vec<(ItemState<'a>, ItemState<'a>)>>())
                         .collect::<Vec<Vec<(ItemState<'a>, ItemState<'a>)>>>()
