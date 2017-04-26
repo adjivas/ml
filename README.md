@@ -13,6 +13,8 @@ This is a reading list of material relevant to *Ml*. It includes prior research 
 
 http://www.omg.org/news/meetings/workshops/presentations/eai_2001/tutorial_monday/tockey_tutorial/4-Class_Models.pdf#page=15
 
+https://fr.wikipedia.org/wiki/Extended_Backus-Naur_Form
+https://en.wikipedia.org/wiki/Comparison_of_parser_generators
 
 ## License
 *Ml*'s code in this repo uses the [GNU GPL v3](http://www.gnu.org/licenses/gpl-3.0.html) [license][license].
