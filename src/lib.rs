@@ -1,6 +1,3 @@
-#![feature(slice_patterns)]
-#![feature(never_type)]
-
 extern crate syntex_syntax as syntax;
 extern crate syntex_errors;
 extern crate itertools;
@@ -232,12 +229,12 @@ impl <'a> Node <'a> {
 
     /// The method `as_name` returns the name of the abstract element
     /// or else declare a panic.
-    pub fn as_name(&self) -> Result<&syntax::symbol::InternedString, !> {
+    pub fn as_name(&self) -> Option<&syntax::symbol::InternedString> {
         match self {
-            &Node::Trait(Trait { vis: _, ref name, ..}) => Ok(name),
-            &Node::Struct(Struct { vis: _, ref name, ..}) => Ok(name),
-            &Node::Enum(Enum { vis: _, ref name, ..}) => Ok(name),
-            &Node::None => unreachable!(),
+            &Node::Trait(Trait { vis: _, ref name, ..}) => Some(name),
+            &Node::Struct(Struct { vis: _, ref name, ..}) => Some(name),
+            &Node::Enum(Enum { vis: _, ref name, ..}) => Some(name),
+            &Node::None => None,
         }
     }
 }
@@ -522,69 +519,69 @@ impl <'a> ItemState <'a> {
     }
 
     pub fn is_association(&self, rhs: &ItemState<'a>) -> bool {
-        match self.as_name() {
-            Ok(name) => {
-                let ref ty_name: String = name.to_string();
+        if let Some(ref name) = self.as_name() {
+            let ref ty_name: String = name.to_string();
 
-                rhs.method.iter()
-                          .any(|func| func.is_association(ty_name))
-                          .bitor(rhs.implem.iter()
-                                           .any(|implem| implem.is_association(&ty_name)))
+            rhs.method.iter()
+                      .any(|func| func.is_association(ty_name))
+                      .bitor(rhs.implem.iter()
+                                       .any(|implem| implem.is_association(&ty_name)))
 
-            }
+        } else {
+            false
         }
     }
 
     pub fn is_dependency(&self, rhs: &ItemState<'a>) -> bool {
-        match self.as_name() {
-            Ok(name) => {
-                let ref ty_name: String = name.to_string();
+        if let Some(ref name) = self.as_name() {
+            let ref ty_name: String = name.to_string();
 
-                rhs.method.iter()
-                          .any(|method| method.is_dependency(&ty_name))
-                          .bitor(self.implem.iter()
-                                            .any(|implem| implem.is_dependency(&ty_name)))
-            }
+            rhs.method.iter()
+                      .any(|method| method.is_dependency(&ty_name))
+                      .bitor(self.implem.iter()
+                                        .any(|implem| implem.is_dependency(&ty_name)))
+        } else {
+            false
         }
     }
 
     pub fn is_aggregation(&self, rhs: &ItemState<'a>) -> bool {
-        match self.as_name() {
-            Ok(name) => {
-                let mut ty_name_mut: String = String::from("*mut ");
-                let mut ty_name_const: String = String::from("*const ");
-                
-                ty_name_mut.push_str(&name);
-                ty_name_const.push_str(&name);
-                rhs.node.into_iter()
-                        .any(|attribut: &String|
-                              attribut.split(|at| "<[(;,)]>".contains(at))
-                                      .any(|ty| ty_name_mut.eq(ty).bitor(ty_name_const.eq(ty))))
-            }
+        if let Some(ref name) = self.as_name() {
+            let mut ty_name_mut: String = String::from("*mut ");
+            let mut ty_name_const: String = String::from("*const ");
+            
+            ty_name_mut.push_str(&name);
+            ty_name_const.push_str(&name);
+            rhs.node.into_iter()
+                    .any(|attribut: &String|
+                          attribut.split(|at| "<[(;,)]>".contains(at))
+                                  .any(|ty| ty_name_mut.eq(ty).bitor(ty_name_const.eq(ty))))
+        } else {
+            false
         }
     }
 
     pub fn is_composition(&self, rhs: &ItemState<'a>) -> bool {
-        match self.as_name() {
-            Ok(name) => {
-                let ty_name: String = name.to_string();
+        if let Some(ref name) = self.as_name() {
+            let ty_name: String = name.to_string();
 
-                rhs.node.into_iter()
-                        .any(|attribut: &String|
-                              attribut.split(|at| "<[(;,)]>".contains(at))
-                                      .any(|ty| ty.eq(&ty_name)))
-            }
+            rhs.node.into_iter()
+                    .any(|attribut: &String|
+                          attribut.split(|at| "<[(;,)]>".contains(at))
+                                  .any(|ty| ty.eq(&ty_name)))
+        } else {
+            false
         }
     }
 
     pub fn is_realization(&self, rhs: &ItemState<'a>) -> bool {
-        match self.as_name() {
-            Ok(name) => {
-                let ty_name: String = name.to_string();
+        if let Some(ref name) = self.as_name() {
+            let ty_name: String = name.to_string();
 
-                rhs.implem.iter()
-                          .any(|implem| implem.is_realization(&ty_name))
-            }
+            rhs.implem.iter()
+                      .any(|implem| implem.is_realization(&ty_name))
+        } else {
+            false
         }
     }
 
@@ -596,7 +593,7 @@ impl <'a> ItemState <'a> {
             .bitor(self.is_realization(rhs))
     }
 
-    pub fn as_name(&self) -> Result<&syntax::symbol::InternedString, !> {
+    pub fn as_name(&self) -> Option<&syntax::symbol::InternedString> {
         self.node.as_name()
     }
 
@@ -789,7 +786,8 @@ impl<'a> dot::Labeller<'a, ItemState<'a>, Segment<'a>> for ListItem<'a> {
 
     fn node_id(&'a self, state: &ItemState<'a>) -> dot::Id<'a> {
         match state.as_name() {
-            Ok(name) => dot::Id::new(format!("nd{}", name)).unwrap(),
+            Some(name) => dot::Id::new(format!("nd{}", name)).unwrap(),
+            _ => unreachable!(),
         }
     }
 
