@@ -2,6 +2,29 @@
 name = "ml"
 version = "0.1.0"
 authors = ["adjivas <adjivas@users.noreply.github.com>"]
+license = "MIT OR Apache-2.0"
+documentation = "http://adjivas.github.io/ml/ml"
+repository = "https://github.com/adjivas/ml"
+readme = "README.md"
+keywords = ["modeling", "language"]
+
+[[bin]]
+name = "ml"
+test = false
+doc = false
+
+[lib]
+test = false
+doctest = false
+
+[features]
+default       = []
+implem        = []
+lints         = ["clippy", "nightly"]
+nightly       = [] # for building with nightly and unstable features
+unstable      = [] # for building with unstable features on stable Rust
+debug         = [] # for building with debug messages
+travis = ["lints", "nightly"] # for building with travis-cargo
 
 [dependencies.syntex_syntax]
 version = "0.58"
@@ -17,3 +40,7 @@ version = "0.5"
 
 [dependencies.dot]
 version = "0.1"
+
+[dependencies.clippy]
+version       = "*"
+optional = true

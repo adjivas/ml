@@ -24,12 +24,17 @@ use syntax::parse::{self, ParseSess};
 
 use itertools::Itertools;
 
+/// The structure Item is a iterable collection of abstract elements.
+
 #[derive(Debug, Clone)]
 struct Item <'a> {
+    /// Iterator.
     it: iter::Peekable<slice::Iter<'a, syntax::ptr::P<syntax::ast::Item>>>,
 }
 
 impl <'a>From<iter::Peekable<slice::Iter<'a, syntax::ptr::P<syntax::ast::Item>>>> for Item<'a> {
+
+    /// The constructor method `from` returns a typed and iterable collection of abstract element.
     fn from(iter: iter::Peekable<slice::Iter<'a, syntax::ptr::P<syntax::ast::Item>>>) -> Item {
         Item {
             it: iter,
@@ -40,20 +45,20 @@ impl <'a>From<iter::Peekable<slice::Iter<'a, syntax::ptr::P<syntax::ast::Item>>>
 impl <'a>Iterator for Item<'a> {
     type Item = ItemState<'a>;
 
+    /// The method `next` will returns the first abstract elements defined like a structure,
+    /// enumeration or trait.
     fn next(&mut self) -> Option<ItemState<'a>> {
         self.it.next().and_then(|item| {
             let mut list: Vec<&'a syntax::ptr::P<syntax::ast::Item>> = vec!(item);
 
-            list.extend(
-                self.it.peeking_take_while(|ref item| {
-                    if let syntax::ast::ItemKind::Impl(_, _, _, _, _, _) = item.node {
-                        true
-                    } else {    
-                        false
-                    }
-                })
-                .collect::<Vec<&'a syntax::ptr::P<syntax::ast::Item>>>()
-            );
+            list.extend(self.it.peeking_take_while(|ref item| {
+                            if let syntax::ast::ItemKind::Impl(_, _, _, _, _, _) = item.node {
+                                true
+                            } else {    
+                                false
+                            }
+                        })
+                        .collect::<Vec<&'a syntax::ptr::P<syntax::ast::Item>>>());
             Some(ItemState::from(list))
         })
     }
@@ -61,6 +66,7 @@ impl <'a>Iterator for Item<'a> {
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Trait<'a> {
+    /// Visibility
     pub vis: &'a syntax::ast::Visibility,
     pub name: syntax::symbol::InternedString,
     pub params: Vec<syntax::symbol::InternedString>,
@@ -110,6 +116,8 @@ impl <'a>fmt::Display for Trait<'a> {
     }
 }
 
+/// The structure `Struct` is a structure abstract element.
+
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Struct<'a> {
     pub vis: &'a syntax::ast::Visibility,
@@ -152,6 +160,8 @@ impl <'a>fmt::Display for Struct<'a> {
         }
     }
 }
+
+/// The structure `Enum` is a enumerate abstract element.
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Enum<'a> {
@@ -208,8 +218,10 @@ impl <'a>fmt::Display for Enum<'a> {
     }
 }
 
+/// The structure `Node` is a enumerate for abstract element types or none.
+
 #[derive(Debug, Eq, PartialEq, Clone)]
-enum Node <'a> {
+pub enum Node <'a> {
     Trait(Trait<'a>),
     Struct(Struct<'a>),
     Enum(Enum<'a>),
@@ -217,33 +229,15 @@ enum Node <'a> {
 }
 
 impl <'a> Node <'a> {
+
+    /// The method `as_name` returns the name of the abstract element
+    /// or else declare a panic.
     pub fn as_name(&self) -> Result<&syntax::symbol::InternedString, !> {
         match self {
             &Node::Trait(Trait { vis: _, ref name, ..}) => Ok(name),
             &Node::Struct(Struct { vis: _, ref name, ..}) => Ok(name),
             &Node::Enum(Enum { vis: _, ref name, ..}) => Ok(name),
             &Node::None => unreachable!(),
-        }
-    }
-    
-    pub fn is_trait(&self) -> bool {
-        match self {
-            &Node::Trait(_) => true,
-            _ => false,
-        }
-    }
-
-    pub fn is_struct(&self) -> bool {
-        match self {
-            &Node::Struct(_) => true,
-            _ => false,
-        }
-    }
-
-    pub fn is_enum(&self) -> bool {
-        match self {
-            &Node::Enum(_) => true,
-            _ => false,
         }
     }
 }
@@ -312,6 +306,8 @@ impl <'a>fmt::Display for Node<'a> {
     }
 }
 
+/// The structure `Method` is a collection of methods from a abstract element.
+
 #[derive(Default, Debug, Clone, Eq, PartialEq)]
 pub struct Method <'a> {
     /// visibility, method's name, arguments, result.
@@ -372,27 +368,32 @@ impl <'a> From<&'a Vec<syntax::ast::ImplItem>> for Method<'a> {
 
 impl <'a>fmt::Display for Method<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}",
-            self.func.iter().map(|&(ref vis, ref name, ref inputs, ref ty)|
-                match (vis, ty) {
-                    (&&syntax::ast::Visibility::Public, &Some(ref ty)) => {
-                        format!("+ {}({}) -&gt; {}", name, inputs.iter().map(|arg| arg.to_string()).collect::<Vec<String>>().join(", "), ty)
-                    },
-                    (&&syntax::ast::Visibility::Public, &None) => {
-                        format!("+ {}({})", name, inputs.iter().map(|arg| arg.to_string()).collect::<Vec<String>>().join(", "))
-                    },
-                    (_, &Some(ref ty)) => {
-                        format!("- {}({}) -&gt; {}", name, inputs.iter().map(|arg| arg.to_string()).collect::<Vec<String>>().join(", "), ty)
-                    },
-                    (_, &None) => {
-                        format!("- {}({})", name, inputs.iter().map(|arg| arg.to_string()).collect::<Vec<String>>().join(", "))
-                    },
-                }
-            )
-            .collect::<Vec<String>>().join("\n")
+        write!(f, "{item}",
+            item = dot::escape_html(self.func.iter()
+                                             .map(|&(ref vis, ref name, ref inputs, ref ty)|
+                                                    match (vis, ty) {
+                                                        (&&syntax::ast::Visibility::Public, &Some(ref ty)) => {
+                                                            format!("+ {}({}) -&gt; {}", name, inputs.iter().map(|arg| arg.to_string()).collect::<Vec<String>>().join(", "), ty)
+                                                        },
+                                                        (&&syntax::ast::Visibility::Public, &None) => {
+                                                            format!("+ {}({})", name, inputs.iter().map(|arg| arg.to_string()).collect::<Vec<String>>().join(", "))
+                                                        },
+                                                        (_, &Some(ref ty)) => {
+                                                            format!("- {}({}) -&gt; {}", name, inputs.iter().map(|arg| arg.to_string()).collect::<Vec<String>>().join(", "), ty)
+                                                        },
+                                                        (_, &None) => {
+                                                            format!("- {}({})", name, inputs.iter().map(|arg| arg.to_string()).collect::<Vec<String>>().join(", "))
+                                                        },
+                                                    }
+                                                )
+                                                .collect::<Vec<String>>()
+                                                .join("\n")
+                                                .as_str())
         )
     }
 }
+
+/// The structure `Implem` is a collection of methods and tyes for an abstract element.
 
 #[derive(Default, Debug, Clone, Eq, PartialEq)]
 pub struct Implem {
@@ -429,21 +430,6 @@ impl Implem {
         /*self.method.iter()
                    .any(|&( _, ref arg, _): &(syntax::symbol::InternedString, std::vec::Vec<String>, Option<String>)|
                        arg.iter().any(|ty| ty.ends_with(name)))*/
-    }
-
-    pub fn is_aggregation(&self, ty_name_mut: &String, ty_name_const: &String) -> bool {
-        false
-        /*self.method.into_iter()
-                   .any(|attribut: &String|
-                         attribut.split(|at| "<[(;,)]>".contains(at))
-                                 .any(|ty| ty_name_mut.eq(ty).bitor(ty_name_const.eq(ty))))*/
-    }
-
-    pub fn is_composition(&self, ty_name: &String) -> bool {
-        false
-        /*self.method.into_iter()
-                   .any(|&( _, ref attribut, _): &(syntax::symbol::InternedString, std::vec::Vec<String>, Option<String>)|
-                          attribut.ends_with(ty_name))*/
     }
 }
 
@@ -488,6 +474,37 @@ impl <'a> From<(&'a Vec<syntax::ast::PathSegment>, &'a Vec<syntax::ast::ImplItem
     }
 }
 
+impl fmt::Display for Implem {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{item}",
+           item = dot::escape_html(self.method.iter()
+                                       .map(|&(ref name, ref args, ref result): &(syntax::symbol::InternedString, std::vec::Vec<String>, Option<String>)| {
+                                           if let &Some(ref ret) = result {
+                                               format!("{}({}) -&gt; {}", name, args.join(", "), ret)
+                                           } else {
+                                               format!("{}({})", name, args.join(", "))
+                                           }
+                                       })
+                                       .collect::<Vec<String>>()
+                                       .join("\n")
+                                       .as_str()))
+        /*if let Some(&(ref name, ref template)) = self.ty.last() {
+            if template.is_empty() {
+                write!(f, "{name}", name = name.to_string())
+            } else {
+                write!(f, "{name}&lt;{item}&gt;",
+                   name = name.to_string(),
+                   item = dot::escape_html(template.join(", ")
+                                                   .as_str()))
+           }
+        } else {
+            Ok(())
+        }*/
+    }
+}
+
+/// The structure `ItemState` describes an abstract element with a collections of methodes
+/// and implementations.
 #[derive(Default, Debug, Clone, Eq, PartialEq)]
 pub struct ItemState<'a> {
     /// Data Type.
@@ -511,6 +528,9 @@ impl <'a> ItemState <'a> {
 
                 rhs.method.iter()
                           .any(|func| func.is_association(ty_name))
+                          .bitor(rhs.implem.iter()
+                                           .any(|implem| implem.is_association(&ty_name)))
+
             }
         }
     }
@@ -540,8 +560,6 @@ impl <'a> ItemState <'a> {
                         .any(|attribut: &String|
                               attribut.split(|at| "<[(;,)]>".contains(at))
                                       .any(|ty| ty_name_mut.eq(ty).bitor(ty_name_const.eq(ty))))
-                        .bitor(self.implem.iter()
-                                          .any(|implem| implem.is_aggregation(&ty_name_mut, &ty_name_const)))
             }
         }
     }
@@ -555,8 +573,6 @@ impl <'a> ItemState <'a> {
                         .any(|attribut: &String|
                               attribut.split(|at| "<[(;,)]>".contains(at))
                                       .any(|ty| ty.eq(&ty_name)))
-                        .bitor(self.implem.iter()
-                                          .any(|implem| implem.is_composition(&ty_name)))
             }
         }
     }
@@ -589,6 +605,7 @@ impl <'a> ItemState <'a> {
     }
 }
 
+/// The enumeration `Relation` is the relationship specification from [UML 2.5](http://www.omg.org/spec/UML/2.5) without generalization.
 pub enum Relation {
     Association,
     Aggregation,
@@ -599,6 +616,8 @@ pub enum Relation {
 }
 
 impl Relation {
+
+    /// The method `as_style` returns a stylized arrow (See *Table B.2 UML Edges* from [UML 2.5](http://www.omg.org/spec/UML/2.5).
     pub fn as_style(&self) -> dot::ArrowShape {
         match self {
             &Relation::Association => dot::ArrowShape::Vee(dot::Side::Both),
@@ -684,21 +703,34 @@ impl <'a>From<Vec<&'a syntax::ptr::P<syntax::ast::Item>>> for ItemState<'a> {
 }
 
 impl <'a>fmt::Display for ItemState<'a> {
+
+    #[cfg(feature = "implem")]
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{{{node}|{method}|{implem}}}",
+            node = self.node,
+            method = self.method.iter()
+                                .map(|ref methods| format!("{}", methods))
+                                .collect::<Vec<String>>().join("\n").as_str(),
+            implem = self.implem.iter()
+                                .map(|ref implem| format!("{}", implem))
+                                .collect::<Vec<String>>().join("\n").as_str())
+    }
+
+    #[cfg(not(feature = "implem"))]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if self.method.is_empty() {
             write!(f, "{{{node}}}", node = self.node)
         } else {
             write!(f, "{{{node}|{method}}}",
                 node = self.node,
-                method = dot::escape_html(
-                    self.method.iter()
-                               .map(|ref methods| format!("{}", methods))
-                               .collect::<Vec<String>>().join("\n").as_str()
-                )
-            )
+                method = self.method.iter()
+                                    .map(|ref methods| format!("{}", methods))
+                                    .collect::<Vec<String>>().join("\n").as_str())
         }
     }
 }
+
+/// The structure `Segment` contents two nodes.
 
 #[derive(Debug, Clone, Eq)]
 pub struct Segment<'a> {
