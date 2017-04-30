@@ -4,6 +4,7 @@ rust:
   - nightly
 os:
   - osx
+  - linux
 addons:
   apt:
     packages:
