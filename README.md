@@ -16,5 +16,5 @@ See LICENSE-APACHE, and LICENSE-MIT for details.
 
 [crate-badge]: https://img.shields.io/badge/crates.io-v0.1.0-orange.svg?style=flat-square
 [crate]: https://crates.io/crates/ml
-[travis-badge]: https://travis-ci.org/adjivas/ml.svg?branch=masterr&style=flat-square
+[travis-badge]: https://travis-ci.org/adjivas/ml.svg?branch=master&style=flat-square
 [travis]: https://travis-ci.org/adjivas/ml
