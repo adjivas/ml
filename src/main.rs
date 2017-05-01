@@ -1,9 +1,11 @@
 extern crate ml;
 
-use std::path::Path;
+use std::fs::File;
+use std::io::Write;
 
 fn main() {
-    println!("{}",
-             String::from_utf8(ml::from_file(Path::new("src/lib.rs")).unwrap()).unwrap()
-            );
+    let content: Vec<u8> = ml::src2dot("src").unwrap();
+    let mut file = File::create(ml::DEFAULT_NAME).unwrap();
+
+    file.write_all(content.as_slice()).unwrap();
 }

@@ -1,8 +1,6 @@
 #![allow(dead_code)]
 extern crate ml;
 
-use std::path::Path;
-
 struct A {
 }
 
@@ -35,10 +33,8 @@ impl B {
 
 #[test]
 fn test_association() {
-    let source = Path::new("tests/association");
-
     assert_eq!(
-        String::from_utf8(ml::from_file(&source.with_extension("rs")).unwrap()).unwrap(),
+        String::from_utf8(ml::rs2dot("tests/association.rs").unwrap()).unwrap(),
         r#"digraph ml {
     ndA[label="{&lt;&lt;&lt;Structure&gt;&gt;&gt;\nA|- b() -&amp;gt; B}"][shape="record"];
     ndAb[label="{&lt;&lt;&lt;Structure&gt;&gt;&gt;\nAb|- b() -&amp;gt; B}"][shape="record"];

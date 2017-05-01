@@ -1,7 +1,9 @@
 [package]
 name = "ml"
 version = "0.1.0"
-authors = ["adjivas <adjivas@users.noreply.github.com>"]
+authors = [
+  "adjivas <adjivas@users.noreply.github.com>"
+]
 license = "MIT OR Apache-2.0"
 documentation = "http://adjivas.github.io/ml/ml"
 repository = "https://github.com/adjivas/ml"
@@ -10,8 +12,8 @@ keywords = ["modeling", "language"]
 
 [[bin]]
 name = "ml"
+doc  = false
 test = false
-doc = false
 
 [lib]
 test = false
@@ -41,6 +43,9 @@ version = "0.5"
 [dependencies.dot]
 version = "0.1"
 
+[dependencies.walkdir]
+version = "1"
+
 [dependencies.clippy]
-version       = "*"
+version = "*"
 optional = true
