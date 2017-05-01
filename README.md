@@ -2,6 +2,8 @@
 
 [![Crate][crate-badge]][crate] [![travis-badge][]][travis]
 
+A library for generating UML language for Rust's project
+
 This repo is provided as a [Cargo package](http://doc.crates.io/manifest.html) and a [build script](http://doc.crates.io/build-script.html), adjust your `Cargo.toml` to include.
 ```toml
 # Cargo.toml
@@ -9,7 +11,7 @@ This repo is provided as a [Cargo package](http://doc.crates.io/manifest.html) a
 version = "0.1"
 ```
 
-And your `build.rs` to generate your uml [graph/dot](http://www.graphviz.org/doc/info/lang.html) and Structured Vector Graphics at **target/dot/{your crate}**.
+And your `build.rs` to generate your uml [graph/viz](http://www.graphviz.org/doc/info/lang.html) and Structured Vector Graphics at **target/dot/$CARGO_PKG_NAME.{dot,svg}**.
 ```rust
 extern crate ml;
 
@@ -21,11 +23,6 @@ fn main() {
                                                           .join("doc")
                                                           .join(env!("CARGO_PKG_NAME")));
 }
-```
-
-`src/lib.rs`
-```rust
-//! ![uml](uml.svg)
 ```
 
 ## Knowledge

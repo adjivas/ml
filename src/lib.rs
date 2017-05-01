@@ -16,7 +16,7 @@
     unused_qualifications
 )]
 
-//! ![uml](uml.svg)
+//! ![uml](ml.svg)
 
 extern crate syntex_syntax;
 extern crate syntex_errors;
