@@ -6,7 +6,6 @@ A library for generating UML language for Rust's project
 
 This repo is provided as a [Cargo package](http://doc.crates.io/manifest.html) and a [build script](http://doc.crates.io/build-script.html), adjust your `Cargo.toml` to include.
 ```toml
-# Cargo.toml
 [build-dependencies.ml]
 version = "0.1"
 ```
