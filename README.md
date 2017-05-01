@@ -2,7 +2,7 @@
 
 [![Crate][crate-badge]][crate] [![travis-badge][]][travis]
 
-This repo is provided as a Cargo package and a [build script](http://doc.crates.io/build-script.html), adjust your `Cargo.toml` to include.
+This repo is provided as a [Cargo package](http://doc.crates.io/manifest.html) and a [build script](http://doc.crates.io/build-script.html), adjust your `Cargo.toml` to include.
 ```toml
 # Cargo.toml
 [dependencies.ml]
@@ -30,9 +30,7 @@ This is a reading list of material relevant to *Ml*. It includes prior research 
 
 ## License
 
-`ml` is primarily distributed under the terms of both the MIT license and
-the Apache License (Version 2.0), with portions covered by various BSD-like
-licenses.
+`ml` is primarily distributed under the terms of both the [MIT license](https://opensource.org/licenses/MIT) and the [Apache License (Version 2.0)](https://www.apache.org/licenses/LICENSE-2.0), with portions covered by various BSD-like licenses.
 
 See LICENSE-APACHE, and LICENSE-MIT for details.
 
