@@ -1,11 +1,10 @@
 extern crate ml;
 
-use std::fs::File;
-use std::io::Write;
+use std::path::PathBuf;
 
 fn main() {
-    let content: Vec<u8> = ml::src2dot("src").unwrap();
-    let mut file = File::create(ml::DEFAULT_NAME).unwrap();
-
-    file.write_all(content.as_slice()).unwrap();
+    ml::src2both(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src"),
+                 PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("target")
+                                                          .join("doc")
+                                                          .join(env!("CARGO_PKG_NAME")));
 }

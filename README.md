@@ -1,10 +1,32 @@
-# Ml
+# ML -Modeling Language-
 
 [![Crate][crate-badge]][crate] [![travis-badge][]][travis]
+
+This repo is provided as a Cargo package and a [build script](http://doc.crates.io/build-script.html), adjust your `Cargo.toml` to include.
+```toml
+# Cargo.toml
+[dependencies.ml]
+version = "0.1"
+```
+
+And your `build.rs`.
+```rust
+extern crate ml;
+
+use std::path::PathBuf;
+
+fn main() {
+    ml::src2both(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src"),
+                 PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("target")
+                                                          .join("doc")
+                                                          .join(env!("CARGO_PKG_NAME")));
+}
+```
 
 ## Knowledge
 This is a reading list of material relevant to *Ml*. It includes prior research that has - at one time or another - influenced the design of *Ml*, as well as publications about *Ml*.
 * [Supporting Tool Reuse with Model Transformation](http://www.yusun.io/papers/sede-2009.pdf)
+* [Unified Modeling Language Version 2.5](http://www.omg.org/spec/UML/2.5)
 
 ## License
 

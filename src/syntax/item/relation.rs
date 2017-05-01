@@ -3,6 +3,7 @@ use super::ItemState;
 use ::dot::{Fill, ArrowShape, Side};
 
 /// The enumeration `Relation` is the relationship specification from [UML 2.5](http://www.omg.org/spec/UML/2.5) without generalization.
+#[derive(Debug, Copy, Clone)]
 pub enum Relation {
     Association,
     Aggregation,

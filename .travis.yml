@@ -13,14 +13,19 @@ addons:
       - libcurl4-openssl-dev
       - libelf-dev
       - libdw-dev
+      - graphviz
 matrix:
   include:
     - rust: nightly
 before_script:
   - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/Library/Python/2.7/bin:$PATH
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update           ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install graphviz ; fi
+
 script:
   - |
       travis-cargo build -- --verbose
+      travis-cargo run
       travis-cargo test
       travis-cargo bench
       travis-cargo doc -- --no-deps
