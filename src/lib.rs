@@ -16,6 +16,8 @@
     unused_qualifications
 )]
 
+//! ![uml](uml.svg)
+
 extern crate syntex_syntax;
 extern crate syntex_errors;
 extern crate itertools;
@@ -43,9 +45,9 @@ use walkdir::WalkDir;
 use syntax::ListItem;
 
 /// The default name of *graph/dot* file.
-pub const DEFAULT_NAME_DOT: &'static str = "uml-2.5.dot";
-/// The default name of *image/png* file.
-pub const DEFAULT_NAME_PNG: &'static str = "uml-2.5.png";
+pub const DEFAULT_NAME_DOT: &'static str = "ml.dot";
+/// The default name of *image/svg* file.
+pub const DEFAULT_NAME_PNG: &'static str = "ml.svg";
 
 /// The function `file2crate` returns a syntex module.
 fn file2crate<P: AsRef<Path>>(path: P) -> Option<ast::Crate> {
@@ -89,9 +91,9 @@ pub fn src2dot<P: AsRef<Path>>(path: P) -> Option<Vec<u8>> {
                                  .concat())
 }
 
-/// The function `content2png` returns pnged graph content of modules.
-fn content2png(buf: Vec<u8>) -> Option<Vec<u8>> {
-        Command::new("dot").arg("-Tpng")
+/// The function `content2svg` returns structured vector graphics content of modules.
+fn content2svg(buf: Vec<u8>) -> Option<Vec<u8>> {
+        Command::new("dot").arg("-Tsvg")
                            .stdin(Stdio::piped()).stdout(Stdio::piped())
                            .spawn()
                            .ok()
@@ -104,27 +106,27 @@ fn content2png(buf: Vec<u8>) -> Option<Vec<u8>> {
                            })
 }
 
-/// The function `rs2png` returns pnged file modules.
-pub fn rs2png<P: AsRef<Path>>(path: P) -> Option<Vec<u8>> {
-    rs2dot(path).and_then(|buf| content2png(buf))
+/// The function `rs2svg` returns structured vector graphics file modules.
+pub fn rs2svg<P: AsRef<Path>>(path: P) -> Option<Vec<u8>> {
+    rs2dot(path).and_then(|buf| content2svg(buf))
 }
 
-/// The function `src2png` returns pnged repository of modules.
-pub fn src2png<P: AsRef<Path>>(path: P) -> Option<Vec<u8>> {
-    src2dot(path).and_then(|buf| content2png(buf))
+/// The function `src2svg` returns structured vector graphics repository of modules.
+pub fn src2svg<P: AsRef<Path>>(path: P) -> Option<Vec<u8>> {
+    src2dot(path).and_then(|buf| content2svg(buf))
 }
 
-/// The function `src2both` creates two files formated like a graph/dot and a image/png.
+/// The function `src2both` creates two files formated like a graph/dot and a structured vector graphics.
 pub fn src2both<P: AsRef<Path>>(src: P, dest: P) -> Option<()> {
     let _ = fs::create_dir_all(dest.as_ref()).unwrap();
     let mut file_dot = File::create(dest.as_ref().join(DEFAULT_NAME_DOT)).unwrap();
-    let mut file_png = File::create(dest.as_ref().join(DEFAULT_NAME_PNG)).unwrap();
+    let mut file_svg = File::create(dest.as_ref().join(DEFAULT_NAME_PNG)).unwrap();
 
     src2dot(src).and_then(|content_dot: Vec<u8>| {
         let _ = file_dot.write_all(content_dot.as_slice()).unwrap();
 
-        content2png(content_dot).and_then(|content_png: Vec<u8>| {
-            let _ = file_png.write_all(content_png.as_slice()).unwrap();
+        content2svg(content_dot).and_then(|content_svg: Vec<u8>| {
+            let _ = file_svg.write_all(content_svg.as_slice()).unwrap();
             Some(())
         })
     })
