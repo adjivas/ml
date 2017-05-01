@@ -1,6 +1,6 @@
 # ML -Modeling Language-
 
-[![Crate][crate-badge]][crate] [![travis-badge][]][travis]
+[![Crate][crate-badge]][crate] [![travis-badge][]][travis] [![appveyor-badge]][appveyor] [![dependencyci-badge]][dependencyci]
 
 A library for generating UML language for Rust's project
 
@@ -36,7 +36,17 @@ This is a reading list of material relevant to *Ml*. It includes prior research 
 
 See [LICENSE-APACHE](LICENSE-APACHE), and [LICENSE-MIT](LICENSE-MIT) for details.
 
+### Contribution
+
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any
+additional terms or conditions.
+
 [crate-badge]: https://img.shields.io/badge/crates.io-v0.1.0-orange.svg?style=flat-square
 [crate]: https://crates.io/crates/ml
 [travis-badge]: https://travis-ci.org/adjivas/ml.svg?branch=master&style=flat-square
 [travis]: https://travis-ci.org/adjivas/ml
+[appveyor-badge]: https://ci.appveyor.com/api/projects/status/p4djl7yo53jmsn1s/branch/master?svg=true
+[appveyor]: https://ci.appveyor.com/project/adjivas/ml/branch/master
+[dependencyci-badge]: https://dependencyci.com/github/adjivas/ml/badge
+[dependencyci]: https://dependencyci.com/github/adjivas/ml
