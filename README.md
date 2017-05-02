@@ -15,15 +15,14 @@ And your `build.rs` to generate your uml [graph/viz](http://www.graphviz.org/doc
 ```rust
 extern crate mml;
 
-use std::path::PathBuf;
-
 fn main() {
-    mml::src2both(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src"),
-                  PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("target")
-                                                           .join("doc")
-                                                           .join(env!("CARGO_PKG_NAME")));
+    let _ = mml::src2both("src", concat!("target/doc/", env!("CARGO_PKG_NAME")));
 }
 ```
+
+That will generate your UML's graph.
+
+![Alt text](https://adjivas.github.io/ml/mml/ml.svg)
 
 ## Features
 Consider this list of fonctionalities like unstandard-uml.

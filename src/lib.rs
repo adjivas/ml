@@ -119,13 +119,8 @@ pub fn src2svg<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>> {
 /// ```
 /// extern crate mml;
 ///
-/// use std::path::PathBuf;
-///
 /// fn main() {
-///     let _ = mml::src2both(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src"),
-///                           PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("target")
-///                                                                    .join("doc")
-///                                                                    .join(env!("CARGO_PKG_NAME")));
+///     let _ = mml::src2both("src", concat!("target/doc/", env!("CARGO_PKG_NAME")));
 /// }
 /// ```
 pub fn src2both<P: AsRef<Path>>(src: P, dest: P) -> io::Result<()> {
