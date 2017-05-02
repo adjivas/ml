@@ -7,6 +7,7 @@ authors = [
 license = "MIT OR Apache-2.0"
 documentation = "http://adjivas.github.io/ml/ml"
 repository = "https://github.com/adjivas/ml"
+homepage = "https://github.com/adjivas/ml"
 readme = "README.md"
 keywords = ["uml", "graph", "dot", "generator", "modeling-language"]
 categories = ["visualization"]
