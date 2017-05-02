@@ -114,6 +114,20 @@ pub fn src2svg<P: AsRef<Path>>(path: P) -> Option<Vec<u8>> {
 }
 
 /// The function `src2both` creates two files formated like a graph/dot and a structured vector graphics.
+///
+/// # Examples
+/// ```
+/// extern crate ml;
+///
+/// use std::path::PathBuf;
+///
+/// fn main() {
+///     ml::src2both(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src"),
+///                  PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("target")
+///                                                           .join("doc")
+///                                                           .join(env!("CARGO_PKG_NAME")));
+/// }
+/// ```
 pub fn src2both<P: AsRef<Path>>(src: P, dest: P) -> Option<()> {
     let _ = fs::create_dir_all(dest.as_ref()).unwrap();
     let mut file_dot = File::create(dest.as_ref().join(DEFAULT_NAME_DOT)).unwrap();
