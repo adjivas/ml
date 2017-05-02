@@ -1,5 +1,5 @@
 #![allow(dead_code, unused_variables)]
-extern crate ml;
+extern crate mml;
 
 use std::fmt::Debug;
 
@@ -34,7 +34,7 @@ impl <T>B<T> {
 
 #[test]
 fn test_realization() {
-    assert_eq!(String::from_utf8(ml::rs2dot("tests/realization.rs").unwrap()).unwrap(),
+    assert_eq!(String::from_utf8(mml::rs2dot("tests/realization.rs").unwrap()).unwrap(),
         r#"digraph ml {
     ndA[label="{&lt;&lt;&lt;Structure&gt;&gt;&gt;\nA|- a: T|- a(a: T) -&amp;gt; Self}"][shape="record"];
     ndB[label="{&lt;&lt;&lt;Trait&gt;&gt;&gt;\nB|a(&amp;Self) -&amp;gt; Option&lt;T&gt;|- a(&amp;self) -&amp;gt; Option&lt;T&gt;}"][shape="record"];

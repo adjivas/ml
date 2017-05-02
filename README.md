@@ -7,21 +7,21 @@ A library to generating UML language from Rust's project.
 ## Usage
 This repo is provided as a [Cargo package](http://doc.crates.io/manifest.html) and a [build script](http://doc.crates.io/build-script.html), adjust your `Cargo.toml` to include.
 ```toml
-[build-dependencies.ml]
+[build-dependencies.mml]
 version = "0.1"
 ```
 
 And your `build.rs` to generate your uml [graph/viz](http://www.graphviz.org/doc/info/lang.html) and Structured Vector Graphics at `target/dot/$CARGO_PKG_NAME.{dot,svg}`.
 ```rust
-extern crate ml;
+extern crate mml;
 
 use std::path::PathBuf;
 
 fn main() {
-    ml::src2both(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src"),
-                 PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("target")
-                                                          .join("doc")
-                                                          .join(env!("CARGO_PKG_NAME")));
+    mml::src2both(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src"),
+                  PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("target")
+                                                           .join("doc")
+                                                           .join(env!("CARGO_PKG_NAME")));
 }
 ```
 
@@ -47,7 +47,7 @@ for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
 additional terms or conditions.
 
 [crate-badge]: https://img.shields.io/badge/crates.io-v0.1.0-orange.svg?style=flat-square
-[crate]: https://crates.io/crates/ml
+[crate]: https://crates.io/crates/mml
 [travis-badge]: https://travis-ci.org/adjivas/ml.svg?branch=master&style=flat-square
 [travis]: https://travis-ci.org/adjivas/ml
 [appveyor-badge]: https://ci.appveyor.com/api/projects/status/7nvg286cq11f5l7l?svg=true
