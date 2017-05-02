@@ -4,13 +4,14 @@
 
 A library for generating UML language for Rust's project
 
+## Usage
 This repo is provided as a [Cargo package](http://doc.crates.io/manifest.html) and a [build script](http://doc.crates.io/build-script.html), adjust your `Cargo.toml` to include.
 ```toml
 [build-dependencies.ml]
 version = "0.1"
 ```
 
-And your `build.rs` to generate your uml [graph/viz](http://www.graphviz.org/doc/info/lang.html) and Structured Vector Graphics at **target/dot/$CARGO_PKG_NAME.{dot,svg}**.
+And your `build.rs` to generate your uml [graph/viz](http://www.graphviz.org/doc/info/lang.html) and Structured Vector Graphics at `target/dot/$CARGO_PKG_NAME.{dot,svg}`.
 ```rust
 extern crate ml;
 
@@ -23,6 +24,10 @@ fn main() {
                                                           .join(env!("CARGO_PKG_NAME")));
 }
 ```
+
+## Features
+Consider this list of fonctionalities like unstandard-uml.
+* implem -- add a column to show the functions from a implementation. 
 
 ## Knowledge
 This is a reading list of material relevant to *Ml*. It includes prior research that has - at one time or another - influenced the design of *Ml*, as well as publications about *Ml*.

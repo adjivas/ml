@@ -45,4 +45,3 @@ impl <'a>From<(&'a ItemState<'a>, &'a ItemState<'a>)> for Relation {
         }
     }
 }
-

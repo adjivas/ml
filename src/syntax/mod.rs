@@ -1,9 +1,7 @@
 pub mod segment;
-
-use self::segment::Segment;
-
 pub mod item;
 
+use self::segment::Segment;
 use self::item::{Item, ItemState};
 use self::item::relation::Relation;
 
@@ -12,9 +10,7 @@ use std::borrow::Cow;
 use std::ops::BitOr;
 
 use ::syntex_syntax::{ptr, ast};
-
 use ::dot::{Nodes, Edges, Arrow, Style, GraphWalk, Labeller, LabelText, Id};
-
 use ::itertools::Itertools;
 
 #[derive(Debug, Clone)]

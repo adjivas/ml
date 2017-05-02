@@ -1,16 +1,12 @@
-use super::relation::Relation;
-
 pub mod abstraction;
-
-use self::abstraction::Abstract;
-
 pub mod implem;
-
-use self::implem::Implem;
-
 pub mod method;
 
+use self::abstraction::Abstract;
+use self::implem::Implem;
 use self::method::Method;
+
+use super::relation::Relation;
 
 use std::ops::BitOr;
 use std::fmt;

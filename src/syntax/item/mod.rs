@@ -1,5 +1,4 @@
 pub mod relation;
-
 pub mod state;
 
 pub use self::state::ItemState;
@@ -7,7 +6,6 @@ pub use self::state::ItemState;
 use std::{slice, iter};
 
 use ::syntex_syntax::{ptr, ast};
-
 use ::itertools::Itertools;
 
 /// The structure Item is a iterable collection of abstract elements.
