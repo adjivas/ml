@@ -50,7 +50,7 @@ additional terms or conditions.
 [crate]: https://crates.io/crates/ml
 [travis-badge]: https://travis-ci.org/adjivas/ml.svg?branch=master&style=flat-square
 [travis]: https://travis-ci.org/adjivas/ml
-[appveyor-badge]: https://ci.appveyor.com/api/projects/status/p4djl7yo53jmsn1s/branch/master?svg=true
+[appveyor-badge]: https://ci.appveyor.com/api/projects/status/7nvg286cq11f5l7l?svg=true
 [appveyor]: https://ci.appveyor.com/project/adjivas/ml/branch/master
 [dependencyci-badge]: https://dependencyci.com/github/adjivas/ml/badge
 [dependencyci]: https://dependencyci.com/github/adjivas/ml
