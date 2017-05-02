@@ -25,7 +25,7 @@ pub mod prelude;
 pub mod syntax;
 
 use std::process::{Command, Stdio};
-use std::io::{Write, Read};
+use std::io::{self, Write, Read};
 use std::path::Path;
 use std::fs::{self, File};
 use std::ffi::OsStr;
@@ -47,31 +47,32 @@ pub const DEFAULT_NAME_DOT: &'static str = "ml.dot";
 pub const DEFAULT_NAME_PNG: &'static str = "ml.svg";
 
 /// The function `file2crate` returns a syntex module.
-fn file2crate<P: AsRef<Path>>(path: P) -> Option<ast::Crate> {
+fn file2crate<P: AsRef<Path>>(path: P) -> io::Result<ast::Crate> {
     let codemap = Rc::new(CodeMap::new());
     let tty_handler =
         Handler::with_tty_emitter(ColorConfig::Auto, true, false, Some(codemap.clone()));
     let parse_session: ParseSess = ParseSess::with_span_handler(tty_handler, codemap.clone());
     let parse = parse::parse_crate_from_file(path.as_ref(), &parse_session);
+    let ast: ast::Crate = parse.unwrap();
 
-    parse.ok()
+    Ok(ast)
 }
 
 /// The function `items2chars` returns a graph formated for *Graphiz/Dot*.
-fn items2chars(list: Vec<ptr::P<ast::Item>>) -> Option<Vec<u8>> {
+fn items2chars(list: Vec<ptr::P<ast::Item>>) -> io::Result<Vec<u8>> {
     let mut f: Vec<u8> = Vec::new();
     let it: ListItem = ListItem::from(list.iter().peekable());
 
-    dot::render(&it, &mut f).ok().and_then(|()| Some(f))
+    dot::render(&it, &mut f).and_then(|()| Ok(f))
 }
 
 /// The function `rs2dot` returns graphed file module.
-pub fn rs2dot<P: AsRef<Path>>(path: P) -> Option<Vec<u8>> {
+pub fn rs2dot<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>> {
     file2crate(path).and_then(|parse: ast::Crate| items2chars(parse.module.items))
 }
 
 /// The function `src2dot` returns graphed repository of modules.
-pub fn src2dot<P: AsRef<Path>>(path: P) -> Option<Vec<u8>> {
+pub fn src2dot<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>> {
     items2chars(WalkDir::new(path).into_iter()
                                  .filter_map(|entry: Result<walkdir::DirEntry, _>| entry.ok())
                                  .filter(|entry| entry.file_type().is_file())
@@ -79,7 +80,7 @@ pub fn src2dot<P: AsRef<Path>>(path: P) -> Option<Vec<u8>> {
                                      let path: &Path = entry.path();
 
                                      if path.extension().eq(&Some(OsStr::new("rs"))) {
-                                         file2crate(path).and_then(|parse| Some(parse.module.items))
+                                         file2crate(path).ok().and_then(|parse| Some(parse.module.items))
                                      } else {
                                          None
                                      }
@@ -89,27 +90,26 @@ pub fn src2dot<P: AsRef<Path>>(path: P) -> Option<Vec<u8>> {
 }
 
 /// The function `content2svg` returns structured vector graphics content of modules.
-fn content2svg(buf: Vec<u8>) -> Option<Vec<u8>> {
+fn content2svg(buf: Vec<u8>) -> io::Result<Vec<u8>> {
         Command::new("dot").arg("-Tsvg")
                            .stdin(Stdio::piped()).stdout(Stdio::piped())
                            .spawn()
-                           .ok()
                            .and_then(|child| {
                                 let mut ret = vec![];
 
                                 child.stdin.unwrap().write_all(buf.as_slice()).unwrap();
                                 child.stdout.unwrap().read_to_end(&mut ret).unwrap();
-                                Some(ret)
+                                Ok(ret)
                            })
 }
 
 /// The function `rs2svg` returns structured vector graphics file modules.
-pub fn rs2svg<P: AsRef<Path>>(path: P) -> Option<Vec<u8>> {
+pub fn rs2svg<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>> {
     rs2dot(path).and_then(|buf| content2svg(buf))
 }
 
 /// The function `src2svg` returns structured vector graphics repository of modules.
-pub fn src2svg<P: AsRef<Path>>(path: P) -> Option<Vec<u8>> {
+pub fn src2svg<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>> {
     src2dot(path).and_then(|buf| content2svg(buf))
 }
 
@@ -122,23 +122,22 @@ pub fn src2svg<P: AsRef<Path>>(path: P) -> Option<Vec<u8>> {
 /// use std::path::PathBuf;
 ///
 /// fn main() {
-///     ml::src2both(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src"),
-///                  PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("target")
-///                                                           .join("doc")
-///                                                           .join(env!("CARGO_PKG_NAME")));
+///     let _ = ml::src2both(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src"),
+///                          PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("target")
+///                                                                   .join("doc")
+///                                                                   .join(env!("CARGO_PKG_NAME")));
 /// }
 /// ```
-pub fn src2both<P: AsRef<Path>>(src: P, dest: P) -> Option<()> {
-    let _ = fs::create_dir_all(dest.as_ref()).unwrap();
-    let mut file_dot = File::create(dest.as_ref().join(DEFAULT_NAME_DOT)).unwrap();
-    let mut file_svg = File::create(dest.as_ref().join(DEFAULT_NAME_PNG)).unwrap();
+pub fn src2both<P: AsRef<Path>>(src: P, dest: P) -> io::Result<()> {
+    let _ = fs::create_dir_all(dest.as_ref())?;
+    let mut file_dot = File::create(dest.as_ref().join(DEFAULT_NAME_DOT))?;
+    let mut file_svg = File::create(dest.as_ref().join(DEFAULT_NAME_PNG))?;
 
-    src2dot(src).and_then(|content_dot: Vec<u8>| {
-        let _ = file_dot.write_all(content_dot.as_slice()).unwrap();
+    let content_dot: Vec<u8> = src2dot(src)?;
+    let _ = file_dot.write_all(content_dot.as_slice())?;
 
-        content2svg(content_dot).and_then(|content_svg: Vec<u8>| {
-            let _ = file_svg.write_all(content_svg.as_slice()).unwrap();
-            Some(())
-        })
-    })
+    let content_svg: Vec<u8> = content2svg(content_dot)?;
+    let _ = file_svg.write_all(content_svg.as_slice())?;
+
+    Ok(())
 }
