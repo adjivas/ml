@@ -1,3 +1,10 @@
+//! The purpose of this module is to provide reexports of core traits so that they can be then
+//! glob-imported all at once:
+//!
+//! ```
+//! use ml::prelude::*;
+//! ```
+
 pub use ::DEFAULT_NAME_DOT;
 pub use ::DEFAULT_NAME_PNG;
 pub use ::syntax::segment::Segment;
