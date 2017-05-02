@@ -2,7 +2,7 @@
 
 [![Crate][crate-badge]][crate] [![travis-badge][]][travis] [![appveyor-badge]][appveyor] [![dependencyci-badge]][dependencyci]
 
-A library for generating UML language for Rust's project
+A library to generating UML language from Rust's project.
 
 ## Usage
 This repo is provided as a [Cargo package](http://doc.crates.io/manifest.html) and a [build script](http://doc.crates.io/build-script.html), adjust your `Cargo.toml` to include.
