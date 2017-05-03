@@ -1,3 +1,5 @@
+use super::DEFAULT_FUNC;
+
 use std::ops::Deref;
 use std::fmt;
 
@@ -90,9 +92,9 @@ impl fmt::Display for Implem {
            item = escape_html(self.method.iter()
                                          .map(|&(ref name, ref args, ref result): &(InternedString, Vec<String>, Option<String>)| {
                                              if let &Some(ref ret) = result {
-                                                 format!("{}({}) -&gt; {}", name, args.join(", "), ret)
+                                                 format!("{}{}({}) -&gt; {}", DEFAULT_FUNC, name, args.join(", "), ret)
                                              } else {
-                                                 format!("{}({})", name, args.join(", "))
+                                                 format!("{}{}({})", DEFAULT_FUNC, name, args.join(", "))
                                              }
                                          })
                                          .collect::<Vec<String>>()

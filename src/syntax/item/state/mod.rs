@@ -2,6 +2,11 @@ pub mod abstraction;
 pub mod implem;
 pub mod method;
 
+#[cfg(not(feature = "fn-emilgardis"))]
+const DEFAULT_FUNC: &'static str = " ";
+#[cfg(feature = "fn-emilgardis")]
+const DEFAULT_FUNC: &'static str = " fn ";
+
 use self::abstraction::Abstract;
 use self::implem::Implem;
 use self::method::Method;

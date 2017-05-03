@@ -1,3 +1,5 @@
+use super::DEFAULT_FUNC;
+
 use std::ops::Deref;
 use std::fmt;
 
@@ -70,16 +72,16 @@ impl <'a>fmt::Display for Method<'a> {
                                         .map(|&(ref vis, ref name, ref inputs, ref ty)|
                                                match (vis, ty) {
                                                    (&&ast::Visibility::Public, &Some(ref ty)) => {
-                                                       format!("+ {}({}) -&gt; {}", name, inputs.iter().map(|arg| arg.to_string()).collect::<Vec<String>>().join(", "), ty)
+                                                       format!("+{}{}({}) -&gt; {}", DEFAULT_FUNC, name, inputs.iter().map(|arg| arg.to_string()).collect::<Vec<String>>().join(", "), ty)
                                                    },
                                                    (&&ast::Visibility::Public, &None) => {
-                                                       format!("+ {}({})", name, inputs.iter().map(|arg| arg.to_string()).collect::<Vec<String>>().join(", "))
+                                                       format!("+{}{}({})", DEFAULT_FUNC, name, inputs.iter().map(|arg| arg.to_string()).collect::<Vec<String>>().join(", "))
                                                    },
                                                    (_, &Some(ref ty)) => {
-                                                       format!("- {}({}) -&gt; {}", name, inputs.iter().map(|arg| arg.to_string()).collect::<Vec<String>>().join(", "), ty)
+                                                       format!("-{}{}({}) -&gt; {}", DEFAULT_FUNC, name, inputs.iter().map(|arg| arg.to_string()).collect::<Vec<String>>().join(", "), ty)
                                                    },
                                                    (_, &None) => {
-                                                       format!("- {}({})", name, inputs.iter().map(|arg| arg.to_string()).collect::<Vec<String>>().join(", "))
+                                                       format!("-{}{}({})", DEFAULT_FUNC, name, inputs.iter().map(|arg| arg.to_string()).collect::<Vec<String>>().join(", "))
                                                    },
                                                }
                                            )

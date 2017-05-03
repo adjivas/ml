@@ -67,11 +67,29 @@ fn items2chars(list: Vec<ptr::P<ast::Item>>) -> io::Result<Vec<u8>> {
 }
 
 /// The function `rs2dot` returns graphed file module.
+///
+/// # Examples
+/// ```
+/// extern crate mml;
+///
+/// fn main() {
+///     let _ = mml::rs2dot("src");
+/// }
+/// ```
 pub fn rs2dot<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>> {
     file2crate(path).and_then(|parse: ast::Crate| items2chars(parse.module.items))
 }
 
 /// The function `src2dot` returns graphed repository of modules.
+///
+/// # Examples
+/// ```
+/// extern crate mml;
+///
+/// fn main() {
+///     let _ = mml::src2dot("src");
+/// }
+/// ```
 pub fn src2dot<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>> {
     items2chars(WalkDir::new(path).into_iter()
                                  .filter_map(|entry: Result<walkdir::DirEntry, _>| entry.ok())
@@ -104,11 +122,29 @@ fn content2svg(buf: Vec<u8>) -> io::Result<Vec<u8>> {
 }
 
 /// The function `rs2svg` returns structured vector graphics file modules.
+///
+/// # Examples
+/// ```
+/// extern crate mml;
+///
+/// fn main() {
+///     let _ = mml::rs2svg("src");
+/// }
+/// ```
 pub fn rs2svg<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>> {
     rs2dot(path).and_then(|buf| content2svg(buf))
 }
 
 /// The function `src2svg` returns structured vector graphics repository of modules.
+///
+/// # Examples
+/// ```
+/// extern crate mml;
+///
+/// fn main() {
+///     let _ = mml::src2svg("src");
+/// }
+/// ```
 pub fn src2svg<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>> {
     src2dot(path).and_then(|buf| content2svg(buf))
 }

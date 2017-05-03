@@ -1,6 +1,6 @@
 [package]
 name = "mml"
-version = "0.1.1"
+version = "0.1.2"
 description = "A library to generating UML language from Rust's project"
 authors = [
     "adjivas <adjivas@users.noreply.github.com>",
@@ -29,6 +29,7 @@ doctest = true
 [features]
 default       = []
 implem        = []
+fn-emilgardis = []
 lints         = ["clippy", "nightly"]
 nightly       = [] # for building with nightly and unstable features
 unstable      = [] # for building with unstable features on stable Rust

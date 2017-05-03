@@ -16,7 +16,7 @@ And your `build.rs` to generate your uml [graph/viz](http://www.graphviz.org/doc
 extern crate mml;
 
 fn main() {
-    let _ = mml::src2both("src", concat!("target/doc/", env!("CARGO_PKG_NAME")));
+    let _ = mml::src2both("src", concat!("/target/doc/", env!("CARGO_PKG_NAME")));
 }
 ```
 
@@ -27,6 +27,7 @@ That will generate your UML's graph.
 ## Features
 Consider this list of fonctionalities like unstandard-uml.
 * implem -- add a column to show the functions from a implementation. 
+* fn-emilgardis -- the function fields are preceded by *fn* keyword (Asked by [Emilgardis](https://github.com/Emilgardis)).
 
 ## Knowledge
 This is a reading list of material relevant to *Ml*. It includes prior research that has - at one time or another - influenced the design of *Ml*, as well as publications about *Ml*.
