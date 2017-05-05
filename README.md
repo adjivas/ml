@@ -7,6 +7,8 @@ A library to generating UML language from Rust's project.
 ## Usage
 This repo is provided as a [Cargo package](http://doc.crates.io/manifest.html) and a [build script](http://doc.crates.io/build-script.html), adjust your `Cargo.toml` to include.
 ```toml
+build = "build.rs"
+
 [build-dependencies.mml]
 version = "0.1"
 ```
@@ -16,7 +18,7 @@ And your `build.rs` to generate your uml [graph/viz](http://www.graphviz.org/doc
 extern crate mml;
 
 fn main() {
-    let _ = mml::src2both("src", concat!("/target/doc/", env!("CARGO_PKG_NAME")));
+    let _ = mml::src2both("src", concat!("target/doc/", env!("CARGO_PKG_NAME")));
 }
 ```
 
