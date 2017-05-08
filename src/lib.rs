@@ -1,4 +1,8 @@
+#![crate_name="mml"]
 #![crate_type= "lib"]
+
+#![doc(html_root_url = "https://docs.rs/mml/0.1.3")]
+
 #![cfg_attr(feature = "nightly", feature(plugin))]
 
 #![cfg_attr(feature = "lints", plugin(clippy))]
@@ -13,6 +17,7 @@
     unused_qualifications
 )]
 
+
 //! ![uml](ml.svg)
 
 extern crate syntex_syntax;
@@ -22,7 +27,7 @@ extern crate walkdir;
 extern crate dot;
 
 pub mod prelude;
-pub mod syntax;
+pub mod core;
 
 use std::process::{Command, Stdio};
 use std::io::{self, Write, Read};
@@ -39,7 +44,7 @@ use syntex_syntax::parse::{self, ParseSess};
 use syntex_syntax::{ast, ptr};
 
 use walkdir::WalkDir;
-use syntax::ListItem;
+use core::ListItem;
 
 /// The default name of *graph/dot* file.
 pub const DEFAULT_NAME_DOT: &'static str = "ml.dot";

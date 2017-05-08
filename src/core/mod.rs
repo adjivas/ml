@@ -1,3 +1,5 @@
+//! Core Syntax and definitions
+
 pub mod segment;
 pub mod item;
 

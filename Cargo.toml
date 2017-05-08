@@ -1,7 +1,7 @@
 [package]
 name = "mml"
-version = "0.1.2"
-description = "A library to generating UML language from Rust's project"
+version = "0.1.3"
+description = "A library to generating UML language from Rust's project into graphiz/dot file."
 authors = [
     "adjivas <adjivas@users.noreply.github.com>",
 ]

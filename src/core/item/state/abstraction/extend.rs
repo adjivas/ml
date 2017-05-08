@@ -46,7 +46,7 @@ impl <'a>fmt::Display for Trait<'a> {
            name = self.name,
            items = escape_html(self.items.iter()
                                    .map(|&(ref name, ref ty, ref ret): &(symbol::InternedString, Vec<String>, String)|
-                                        format!("{name}({ty}) -&gt; {ret}",
+                                        format!("{name}({ty}) -> {ret}",
                                             name = name,
                                             ty = ty.join(", "),
                                             ret = ret

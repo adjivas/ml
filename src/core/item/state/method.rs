@@ -72,13 +72,13 @@ impl <'a>fmt::Display for Method<'a> {
                                         .map(|&(ref vis, ref name, ref inputs, ref ty)|
                                                match (vis, ty) {
                                                    (&&ast::Visibility::Public, &Some(ref ty)) => {
-                                                       format!("+{}{}({}) -&gt; {}", DEFAULT_FUNC, name, inputs.iter().map(|arg| arg.to_string()).collect::<Vec<String>>().join(", "), ty)
+                                                       format!("+{}{}({}) -> {}", DEFAULT_FUNC, name, inputs.iter().map(|arg| arg.to_string()).collect::<Vec<String>>().join(", "), ty)
                                                    },
                                                    (&&ast::Visibility::Public, &None) => {
                                                        format!("+{}{}({})", DEFAULT_FUNC, name, inputs.iter().map(|arg| arg.to_string()).collect::<Vec<String>>().join(", "))
                                                    },
                                                    (_, &Some(ref ty)) => {
-                                                       format!("-{}{}({}) -&gt; {}", DEFAULT_FUNC, name, inputs.iter().map(|arg| arg.to_string()).collect::<Vec<String>>().join(", "), ty)
+                                                       format!("-{}{}({}) -> {}", DEFAULT_FUNC, name, inputs.iter().map(|arg| arg.to_string()).collect::<Vec<String>>().join(", "), ty)
                                                    },
                                                    (_, &None) => {
                                                        format!("-{}{}({})", DEFAULT_FUNC, name, inputs.iter().map(|arg| arg.to_string()).collect::<Vec<String>>().join(", "))

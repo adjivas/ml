@@ -2,10 +2,12 @@
 
 [![Crate][crate-badge]][crate] [![travis-badge][]][travis] [![appveyor-badge]][appveyor] [![dependencyci-badge]][dependencyci]
 
-A library to generating UML language from Rust's project.
+A library to generating UML language from Rust's project into graphiz/dot file.
 
 ## Usage
-This repo is provided as a [Cargo package](http://doc.crates.io/manifest.html) and a [build script](http://doc.crates.io/build-script.html), adjust your `Cargo.toml` to include.
+This repo is provided as a [Cargo package](http://doc.crates.io/manifest.html) and a [build script](http://doc.crates.io/build-script.html).
+
+1. adjust your `Cargo.toml` to include.
 ```toml
 build = "build.rs"
 
@@ -13,7 +15,7 @@ build = "build.rs"
 version = "0.1"
 ```
 
-And your `build.rs` to generate your uml [graph/viz](http://www.graphviz.org/doc/info/lang.html) and Structured Vector Graphics at `target/dot/$CARGO_PKG_NAME.{dot,svg}`.
+2. And your `build.rs` to generate your uml [graph/viz](http://www.graphviz.org/doc/info/lang.html) and Structured Vector Graphics at `target/dot/$CARGO_PKG_NAME.{dot,svg}`.
 ```rust
 extern crate mml;
 
@@ -22,9 +24,26 @@ fn main() {
 }
 ```
 
-That will generate your UML's graph.
+3. (Facultative) From your entry point library file, you can add the generated vectorized graph.
+```rust
+//! ![uml](ml.svg)
+```
 
-![Alt text](https://adjivas.github.io/ml/mml/ml.svg)
+4. (Facultative) With the [travis-cargo](https://github.com/huonw/travis-cargo)'s instructions, you can prepare your *graphviz*'s dependency like with this example.
+```yaml
+addons:
+  apt:
+    packages:
+      - graphviz
+before_script:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update           ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install graphviz ; fi
+...
+script:
+  - |
+      travis-cargo build &&
+...
+```
 
 ## Features
 Consider this list of fonctionalities like unstandard-uml.

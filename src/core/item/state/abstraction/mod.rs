@@ -6,7 +6,7 @@ use std::fmt;
 use std::vec;
 
 use ::syntex_syntax::symbol;
-use ::syntax::ast;
+use ::core::ast;
 
 use self::extend::Trait;
 use self::structure::Struct;
