@@ -20,9 +20,11 @@ pub struct Implem {
 
 impl Implem {
     pub fn is_realization(&self, ty_name: &String) -> bool {
-        self.ty.iter()
-               .any(|&(ref name, _): &(InternedString, Vec<String>)|
-                    name.to_string().eq(ty_name))
+        if let Some(&(ref name, _)) = self.ty.first() {
+            name.to_string().eq(ty_name)
+        } else {
+            false
+        }
     }
 
     pub fn is_association(&self, ty_name: &String) -> bool {

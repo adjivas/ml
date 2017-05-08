@@ -1,7 +1,7 @@
 #![crate_name="mml"]
 #![crate_type= "lib"]
 
-#![doc(html_root_url = "https://docs.rs/mml/0.1.4")]
+#![doc(html_root_url = "https://docs.rs/mml/0.1.41")]
 
 #![cfg_attr(feature = "nightly", feature(plugin))]
 

@@ -1,6 +1,6 @@
 [package]
 name = "mml"
-version = "0.1.4"
+version = "0.1.41"
 description = "A library to generating UML language from Rust's project into graphiz/dot file."
 authors = [
     "adjivas <adjivas@users.noreply.github.com>",
