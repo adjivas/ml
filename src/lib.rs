@@ -1,7 +1,7 @@
 #![crate_name="mml"]
 #![crate_type= "lib"]
 
-#![doc(html_root_url = "https://docs.rs/mml/0.1.3")]
+#![doc(html_root_url = "https://docs.rs/mml/0.1.4")]
 
 #![cfg_attr(feature = "nightly", feature(plugin))]
 
@@ -78,7 +78,7 @@ fn items2chars(list: Vec<ptr::P<ast::Item>>) -> io::Result<Vec<u8>> {
 /// extern crate mml;
 ///
 /// fn main() {
-///     let _ = mml::rs2dot("src");
+///     let _ = mml::rs2dot("src/lib.rs");
 /// }
 /// ```
 pub fn rs2dot<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>> {
@@ -133,7 +133,7 @@ fn content2svg(buf: Vec<u8>) -> io::Result<Vec<u8>> {
 /// extern crate mml;
 ///
 /// fn main() {
-///     let _ = mml::rs2svg("src");
+///     let _ = mml::rs2svg("src/lib.rs");
 /// }
 /// ```
 pub fn rs2svg<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>> {
