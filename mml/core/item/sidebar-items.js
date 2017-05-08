@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["relation",""],["state",""]],"struct":[["Item","The structure Item is a iterable collection of abstract elements."]]});

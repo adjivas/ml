@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Relation","The enumeration `Relation` is the relationship specification from UML 2.5 without generalization."]]});

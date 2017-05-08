@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Struct","The structure `Struct` is a structure abstract element."]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Enum","The structure `Enum` is a enumerate abstract element."]]});

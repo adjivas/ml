@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Implem","The structure `Implem` is a collection of methods and tyes for an abstract element."]]});

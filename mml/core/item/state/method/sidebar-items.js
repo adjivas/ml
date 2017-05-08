@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Method","The structure `Method` is a collection of methods from a abstract element."]]});

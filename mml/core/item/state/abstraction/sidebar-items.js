@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Abstract","The structure `Abstract` is a enumerate for abstract element types or none."]],"mod":[["enumerate",""],["extend",""],["structure",""]]});

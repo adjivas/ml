@@ -1,0 +1,25 @@
+digraph ml {
+    ndItem[label="{&lt;&lt;&lt;Structure&gt;&gt;&gt;\nItem|- it: iter::Peekable&lt;slice::Iter&lt;\'a, ptr::P&lt;ast::Item&gt;&gt;&gt;}"][shape="record"];
+    ndRelation[label="{&lt;&lt;&lt;Enumeration&gt;&gt;&gt;\nRelation|Association\nAggregation\nComposition\nRealization\nDependency\nNone|+ as_style(&amp;self) -&gt; ArrowShape}"][shape="record"];
+    ndEnum[label="{&lt;&lt;&lt;Structure&gt;&gt;&gt;\nEnum|+ vis: &amp;\'a ast::Visibility\n+ name: symbol::InternedString\n+ params: Vec&lt;symbol::InternedString&gt;\n+ variants: Vec&lt;(symbol::InternedString, Vec&lt;String&gt;)&gt;}"][shape="record"];
+    ndTrait[label="{&lt;&lt;&lt;Structure&gt;&gt;&gt;\nTrait|+ vis: &amp;\'a ast::Visibility\n+ name: symbol::InternedString\n+ params: Vec&lt;symbol::InternedString&gt;\n+ items: Vec&lt;(symbol::InternedString, Vec&lt;String&gt;, String)&gt;}"][shape="record"];
+    ndAbstract[label="{&lt;&lt;&lt;Enumeration&gt;&gt;&gt;\nAbstract|Trait(Trait&lt;\'a&gt;)\nStruct(Struct&lt;\'a&gt;)\nEnum(Enum&lt;\'a&gt;)\nNone|+ as_name(&amp;self) -&gt; Option&lt;&amp;symbol::InternedString&gt;}"][shape="record"];
+    ndStruct[label="{&lt;&lt;&lt;Structure&gt;&gt;&gt;\nStruct|+ vis: &amp;\'a ast::Visibility\n+ name: symbol::InternedString\n+ fields: Vec&lt;(&amp;\'a ast::Visibility, symbol::InternedString, String)&gt;}"][shape="record"];
+    ndImplem[label="{&lt;&lt;&lt;Structure&gt;&gt;&gt;\nImplem|- ty: Vec&lt;(InternedString, Vec&lt;String&gt;)&gt;\n- method: Vec&lt;(InternedString, Vec&lt;String&gt;, Option&lt;String&gt;)&gt;|+ is_realization(&amp;self, ty_name: &amp;String) -&gt; bool\n+ is_association(&amp;self, ty_name: &amp;String) -&gt; bool\n+ is_dependency(&amp;self, _: &amp;String) -&gt; bool}"][shape="record"];
+    ndMethod[label="{&lt;&lt;&lt;Structure&gt;&gt;&gt;\nMethod|- func: Vec&lt;(&amp;\'a ast::Visibility, InternedString, Vec&lt;String&gt;, Option&lt;String&gt;)&gt;|+ is_association(&amp;self, ty_name: &amp;String) -&gt; bool\n+ is_dependency(&amp;self, name: &amp;String) -&gt; bool}"][shape="record"];
+    ndItemState[label="{&lt;&lt;&lt;Structure&gt;&gt;&gt;\nItemState|- node: Abstract&lt;\'a&gt;\n- method: Vec&lt;Method&lt;\'a&gt;&gt;\n- implem: Vec&lt;Implem&gt;|+ is_none(&amp;self) -&gt; bool\n+ is_association(&amp;self, rhs: &amp;ItemState&lt;\'a&gt;) -&gt; bool\n+ is_dependency(&amp;self, rhs: &amp;ItemState&lt;\'a&gt;) -&gt; bool\n+ is_aggregation(&amp;self, rhs: &amp;ItemState&lt;\'a&gt;) -&gt; bool\n+ is_composition(&amp;self, rhs: &amp;ItemState&lt;\'a&gt;) -&gt; bool\n+ is_realization(&amp;self, rhs: &amp;ItemState&lt;\'a&gt;) -&gt; bool\n+ is_relation(&amp;self, rhs: &amp;ItemState&lt;\'a&gt;) -&gt; bool\n+ as_name(&amp;self) -&gt; Option&lt;&amp;InternedString&gt;\n+ as_arrow(&amp;self, rhs: &amp;ItemState&lt;\'a&gt;) -&gt; Relation}"][shape="record"];
+    ndListItem[label="{&lt;&lt;&lt;Structure&gt;&gt;&gt;\nListItem|- parse: Item&lt;\'a&gt;}"][shape="record"];
+    ndSegment[label="{&lt;&lt;&lt;Structure&gt;&gt;&gt;\nSegment|+ left: ItemState&lt;\'a&gt;\n+ right: ItemState&lt;\'a&gt;}"][shape="record"];
+    ndItem -> ndListItem[label=""][arrowhead="diamond"];
+    ndRelation -> ndItemState[label=""][arrowhead="vee"];
+    ndEnum -> ndAbstract[label=""][arrowhead="diamond"];
+    ndTrait -> ndAbstract[label=""][arrowhead="diamond"];
+    ndAbstract -> ndItemState[label=""][arrowhead="diamond"];
+    ndStruct -> ndAbstract[label=""][arrowhead="diamond"];
+    ndImplem -> ndItemState[label=""][arrowhead="diamond"];
+    ndMethod -> ndItemState[label=""][arrowhead="diamond"];
+    ndItemState -> ndItem[label=""][arrowhead="vee"];
+    ndItemState -> ndListItem[label=""][arrowhead="vee"];
+    ndItemState -> ndSegment[label=""][arrowhead="diamond"];
+    ndSegment -> ndListItem[label=""][arrowhead="vee"];
+}

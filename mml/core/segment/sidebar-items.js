@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Segment","The structure `Segment` contents two nodes."]]});
