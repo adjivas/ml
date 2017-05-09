@@ -161,7 +161,9 @@ pub fn src2svg<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>> {
 /// extern crate mml;
 ///
 /// fn main() {
-///     let _ = mml::src2both("src", concat!("target/doc/", env!("CARGO_PKG_NAME")));
+///    let dest: String = concat!("target/doc/", env!("CARGO_PKG_NAME")).to_string();
+///
+///    let _ = mml::src2both("src", dest.replace("-", "_").as_str());
 /// }
 /// ```
 pub fn src2both<P: AsRef<Path>>(src: P, dest: P) -> io::Result<()> {
