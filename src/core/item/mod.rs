@@ -36,7 +36,7 @@ impl <'a>Iterator for Item<'a> {
             let mut list: Vec<&'a ptr::P<ast::Item>> = vec!(item);
 
             list.extend(self.it.peeking_take_while(|ref item| {
-                            if let ast::ItemKind::Impl(_, _, _, _, _, _) = item.node {
+                            if let ast::ItemKind::Impl(..) = item.node {
                                 true
                             } else {    
                                 false

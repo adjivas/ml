@@ -126,7 +126,7 @@ impl <'a>From<(Abstract<'a>, Vec<&'a ptr::P<ast::Item>>)> for ItemState<'a> {
             node: node,
             method: properties.iter()
                 .filter_map(|item: (&&'a ptr::P<ast::Item>)|
-                    if let ast::ItemKind::Impl(_, _, _, None, _, ref impl_item) = item.node {
+                    if let ast::ItemKind::Impl(_, _, _, _, None, _, ref impl_item) = item.node {
                         Some(Method::from(impl_item))
                     } else {
                         None
@@ -135,7 +135,7 @@ impl <'a>From<(Abstract<'a>, Vec<&'a ptr::P<ast::Item>>)> for ItemState<'a> {
                 .collect::<Vec<Method>>(),
             implem: properties.iter()
                 .filter_map(|item: (&&'a ptr::P<ast::Item>)|
-                    if let ast::ItemKind::Impl(_, _, _, Some(ast::TraitRef {path: ast::Path {span: _, ref segments}, ..}), _, ref impl_item) = item.node {
+                    if let ast::ItemKind::Impl(_, _, _, _, Some(ast::TraitRef {path: ast::Path {span: _, ref segments}, ..}), _, ref impl_item) = item.node {
                         Some(Implem::from((segments, impl_item)))
                     } else {
                         None

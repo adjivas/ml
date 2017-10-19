@@ -1,6 +1,6 @@
 [package]
 name = "mml"
-version = "0.1.41"
+version = "0.1.59"
 description = "A library to generating UML language from Rust's project into graphiz/dot file."
 authors = [
     "adjivas <adjivas@users.noreply.github.com>",
@@ -37,10 +37,10 @@ debug         = [] # for building with debug messages
 travis        = ["lints", "nightly"] # for building with travis-cargo
 
 [dependencies.syntex_syntax]
-version = "0.58"
+version = "0.59"
 
 [dependencies.syntex_errors]
-version = "0.58"
+version = "0.59"
 
 [dependencies.rustc-serialize]
 version = "0.3"

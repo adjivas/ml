@@ -39,7 +39,7 @@ use std::rc::Rc;
 use syntex_errors::emitter::ColorConfig;
 use syntex_errors::Handler;
 
-use syntex_syntax::codemap::CodeMap;
+use syntex_syntax::codemap::{CodeMap, FilePathMapping};
 use syntex_syntax::parse::{self, ParseSess};
 use syntex_syntax::{ast, ptr};
 
@@ -53,7 +53,7 @@ pub const DEFAULT_NAME_PNG: &'static str = "ml.svg";
 
 /// The function `file2crate` returns a syntex module.
 fn file2crate<P: AsRef<Path>>(path: P) -> io::Result<ast::Crate> {
-    let codemap = Rc::new(CodeMap::new());
+    let codemap = Rc::new(CodeMap::new(FilePathMapping::empty()));
     let tty_handler =
         Handler::with_tty_emitter(ColorConfig::Auto, true, false, Some(codemap.clone()));
     let parse_session: ParseSess = ParseSess::with_span_handler(tty_handler, codemap.clone());

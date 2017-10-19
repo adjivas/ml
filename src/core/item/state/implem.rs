@@ -59,7 +59,7 @@ impl From<(Vec<(InternedString, Vec<String>)>, Vec<(InternedString, Vec<String>,
 impl <'a> From<(&'a Vec<ast::PathSegment>, &'a Vec<ast::ImplItem>)> for Implem {
     fn from((segments, impl_item): (&'a Vec<ast::PathSegment>, &'a Vec<ast::ImplItem>)) -> Implem {
         Implem::from((segments.iter()
-                              .map(|&ast::PathSegment { identifier: ast::Ident {name, ..}, ref parameters }| {
+                              .map(|&ast::PathSegment { identifier: ast::Ident {name, ..}, span: _, ref parameters }| {
                                   if let &Some(ref path) = parameters {
                                       if let &ast::PathParameters::AngleBracketed(
                                           ast::AngleBracketedParameterData { lifetimes: _, ref types, .. }
