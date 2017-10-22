@@ -1,4 +1,6 @@
 use std::fmt;
+use std::ffi::OsString;
+use std::rc::Rc;
 
 use ::syntex_syntax::print::pprust::ty_to_string;
 use ::syntex_syntax::{codemap, symbol, ast};
@@ -9,15 +11,18 @@ use ::dot::escape_html;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Enum<'a> {
+    pub path: Rc<Vec<OsString>>,
+    /// Visibility
     pub vis: &'a ast::Visibility,
     pub name: symbol::InternedString,
     pub params: Vec<symbol::InternedString>,
     pub variants: Vec<(symbol::InternedString, Vec<String>)>,
 }
 
-impl <'a>From<(&'a ast::Item, &'a Vec<ast::TyParam>, &'a Vec<ast::Variant>)> for Enum<'a> {
-    fn from((item, ty_params, variants): (&'a ast::Item, &'a Vec<ast::TyParam>, &'a Vec<ast::Variant>)) -> Enum<'a> {
+impl <'a>From<((&'a ast::Item, &'a Vec<ast::TyParam>, &'a Vec<ast::Variant>), Rc<Vec<OsString>>)> for Enum<'a> {
+    fn from(((item, ty_params, variants), path): ((&'a ast::Item, &'a Vec<ast::TyParam>, &'a Vec<ast::Variant>), Rc<Vec<OsString>>)) -> Enum<'a> {
         Enum {
+            path: path,
             vis: &item.vis,
             name: item.ident.name.as_str(),
             params: ty_params.iter()

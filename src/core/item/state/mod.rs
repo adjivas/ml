@@ -15,6 +15,8 @@ use super::relation::Relation;
 
 use std::ops::BitOr;
 use std::fmt;
+use std::ffi::OsString;
+use std::rc::Rc;
 
 use ::syntex_syntax::symbol::InternedString;
 use ::syntex_syntax::{ptr, ast};
@@ -120,21 +122,21 @@ impl <'a> ItemState <'a> {
     }
 }
 
-impl <'a>From<(Abstract<'a>, Vec<&'a ptr::P<ast::Item>>)> for ItemState<'a> {
-    fn from((node, properties): (Abstract<'a>, Vec<&'a ptr::P<ast::Item>>)) -> ItemState<'a> {
+impl <'a>From<(Abstract<'a>, Vec<&'a (ptr::P<ast::Item>, Rc<Vec<OsString>>)>)> for ItemState<'a> {
+    fn from((node, properties): (Abstract<'a>, Vec<&'a (ptr::P<ast::Item>, Rc<Vec<OsString>>)>)) -> ItemState<'a> {
         ItemState {
             node: node,
             method: properties.iter()
-                .filter_map(|item: (&&'a ptr::P<ast::Item>)|
+                .filter_map(|&&(ref item, ref path): (&&'a (ptr::P<ast::Item>, Rc<Vec<OsString>>))|
                     if let ast::ItemKind::Impl(_, _, _, _, None, _, ref impl_item) = item.node {
-                        Some(Method::from(impl_item))
+                        Some(Method::from((impl_item, Rc::clone(path))))
                     } else {
                         None
                     }
                 )
                 .collect::<Vec<Method>>(),
             implem: properties.iter()
-                .filter_map(|item: (&&'a ptr::P<ast::Item>)|
+                .filter_map(|&&(ref item, _): (&&'a (ptr::P<ast::Item>, Rc<Vec<OsString>>))|
                     if let ast::ItemKind::Impl(_, _, _, _, Some(ast::TraitRef {path: ast::Path {span: _, ref segments}, ..}), _, ref impl_item) = item.node {
                         Some(Implem::from((segments, impl_item)))
                     } else {
@@ -146,26 +148,26 @@ impl <'a>From<(Abstract<'a>, Vec<&'a ptr::P<ast::Item>>)> for ItemState<'a> {
     }
 }
 
-impl <'a>From<Vec<&'a ptr::P<ast::Item>>> for ItemState<'a> {
-    fn from(state: Vec<&'a ptr::P<ast::Item>>) -> ItemState<'a> {
-        state.split_first().and_then(|(ref item, properties): (&&'a ptr::P<ast::Item>, &[&'a ptr::P<ast::Item>])| {
+impl <'a>From<Vec<&'a (ptr::P<ast::Item>, Rc<Vec<OsString>>)>> for ItemState<'a> {
+    fn from(state: Vec<&'a (ptr::P<ast::Item>, Rc<Vec<OsString>>)>) -> ItemState<'a> {
+        state.split_first().and_then(|(&&(ref item, ref path), properties): (&&'a (ptr::P<ast::Item>, Rc<Vec<OsString>>), &[&'a (ptr::P<ast::Item>, Rc<Vec<OsString>>)])| {
             match &item.node {
                 /// Trait.
                 &ast::ItemKind::Trait(_, ast::Generics {lifetimes: _, ref ty_params, ..}, _, ref trait_item) => {
                     let kind: (&'a ast::Item, &'a Vec<ast::TyParam>, &'a Vec<ast::TraitItem>) = (item, ty_params, trait_item);
-                    let kind: (Abstract, Vec<&'a ptr::P<ast::Item>>) = (Abstract::from(kind), properties.to_vec());
+                    let kind: (Abstract, Vec<&'a (ptr::P<ast::Item>, Rc<Vec<OsString>>)>) = (Abstract::from((kind, Rc::clone(path))), properties.to_vec());
                     Some(ItemState::from(kind))
                 },
                 /// Structure with variables.
                 &ast::ItemKind::Struct(ast::VariantData::Struct(ref struct_field, _), ..) => {
                     let kind: (&'a ast::Item, &'a Vec<ast::StructField>) = (item, struct_field);
-                    let kind: (Abstract, Vec<&'a ptr::P<ast::Item>>) = (Abstract::from(kind), properties.to_vec());
+                    let kind: (Abstract, Vec<&'a (ptr::P<ast::Item>, Rc<Vec<OsString>>)>) = (Abstract::from((kind, Rc::clone(path))), properties.to_vec());
                     Some(ItemState::from(kind))
                 },
                 /// Enumeration with variables.
                 &ast::ItemKind::Enum(ast::EnumDef {ref variants}, ast::Generics {lifetimes: _, ref ty_params, ..}) => {
                     let kind: (&'a ast::Item, &'a Vec<ast::TyParam>, &'a Vec<ast::Variant>) = (item, ty_params, variants);
-                    let kind: (Abstract, Vec<&'a ptr::P<ast::Item>>) = (Abstract::from(kind), properties.to_vec());
+                    let kind: (Abstract, Vec<&'a (ptr::P<ast::Item>, Rc<Vec<OsString>>)>) = (Abstract::from((kind, Rc::clone(path))), properties.to_vec());
                     Some(ItemState::from(kind))
                 },
                 _ => None,

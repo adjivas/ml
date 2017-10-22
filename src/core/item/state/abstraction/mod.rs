@@ -4,6 +4,8 @@ pub mod enumerate;
 
 use std::fmt;
 use std::vec;
+use std::ffi::OsString;
+use std::rc::Rc;
 
 use ::syntex_syntax::symbol;
 use ::core::ast;
@@ -42,13 +44,13 @@ impl<'a> IntoIterator for &'a Abstract<'a> {
 
     fn into_iter(self) -> Self::IntoIter {
         match self {
-            &Abstract::Struct(Struct {vis: _, name: _, fields: ref ty_field}) => {
+            &Abstract::Struct(Struct {path: _, vis: _, name: _, fields: ref ty_field}) => {
                 ty_field.iter()
                         .map(|&(_, _, ref ty): &'a (&'a ast::Visibility, symbol::InternedString, String)| ty)
                         .collect::<Vec<&'a String>>()
                         .into_iter()
             },
-            &Abstract::Enum(Enum {vis: _, name: _, params: _, variants: ref ty_multi_field}) => {
+            &Abstract::Enum(Enum {path: _, vis: _, name: _, params: _, variants: ref ty_multi_field}) => {
                 ty_multi_field.iter()
                               .map(|&(_, ref ty_field): &'a (symbol::InternedString, Vec<String>)| 
                                    ty_field.iter()
@@ -71,20 +73,20 @@ impl <'a> Default for Abstract<'a> {
     }
 }
 
-impl <'a>From<(&'a ast::Item, &'a Vec<ast::TyParam>, &'a Vec<ast::TraitItem>)> for Abstract<'a> {
-    fn from(arguments: (&'a ast::Item, &'a Vec<ast::TyParam>, &'a Vec<ast::TraitItem>)) -> Abstract<'a> {
+impl <'a>From<((&'a ast::Item, &'a Vec<ast::TyParam>, &'a Vec<ast::TraitItem>), Rc<Vec<OsString>>)> for Abstract<'a> {
+    fn from(arguments: ((&'a ast::Item, &'a Vec<ast::TyParam>, &'a Vec<ast::TraitItem>), Rc<Vec<OsString>>)) -> Abstract<'a> {
         Abstract::Trait(Trait::from(arguments))
     }
 }
 
-impl <'a>From<(&'a ast::Item, &'a Vec<ast::StructField>)> for Abstract<'a> {
-    fn from(arguments: (&'a ast::Item, &'a Vec<ast::StructField>)) -> Abstract<'a> {
+impl <'a>From<((&'a ast::Item, &'a Vec<ast::StructField>), Rc<Vec<OsString>>)> for Abstract<'a> {
+    fn from(arguments: ((&'a ast::Item, &'a Vec<ast::StructField>), Rc<Vec<OsString>>)) -> Abstract<'a> {
         Abstract::Struct(Struct::from(arguments))
     }
 }
 
-impl <'a>From<(&'a ast::Item, &'a Vec<ast::TyParam>, &'a Vec<ast::Variant>)> for Abstract<'a> {
-    fn from(arguments: (&'a ast::Item, &'a Vec<ast::TyParam>, &'a Vec<ast::Variant>)) -> Abstract<'a> {
+impl <'a>From<((&'a ast::Item, &'a Vec<ast::TyParam>, &'a Vec<ast::Variant>), Rc<Vec<OsString>>)> for Abstract<'a> {
+    fn from(arguments: ((&'a ast::Item, &'a Vec<ast::TyParam>, &'a Vec<ast::Variant>), Rc<Vec<OsString>>)) -> Abstract<'a> {
         Abstract::Enum(Enum::from(arguments))
     }
 }

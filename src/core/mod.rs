@@ -10,6 +10,8 @@ use self::item::relation::Relation;
 use std::{slice, iter};
 use std::borrow::Cow;
 use std::ops::BitOr;
+use std::ffi::OsString;
+use std::rc::Rc;
 
 use ::syntex_syntax::{ptr, ast};
 use ::dot::{Nodes, Edges, Arrow, Style, GraphWalk, Labeller, LabelText, Id};
@@ -28,8 +30,8 @@ impl <'a> From<Item<'a>> for ListItem <'a> {
     }
 }
 
-impl <'a> From<iter::Peekable<slice::Iter<'a, ptr::P<ast::Item>>>> for ListItem <'a> {
-    fn from(list: iter::Peekable<slice::Iter<'a, ptr::P<ast::Item>>>) -> ListItem <'a> {
+impl <'a> From<iter::Peekable<slice::Iter<'a, (ptr::P<ast::Item>, Rc<Vec<OsString>>)>>> for ListItem <'a> {
+    fn from(list: iter::Peekable<slice::Iter<'a, (ptr::P<ast::Item>, Rc<Vec<OsString>>)>>) -> ListItem <'a> {
         ListItem::from(Item::from(list))
     }
 }

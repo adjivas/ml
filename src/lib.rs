@@ -17,7 +17,6 @@
     unused_qualifications
 )]
 
-
 //! ![uml](ml.svg)
 
 extern crate syntex_syntax;
@@ -27,13 +26,14 @@ extern crate walkdir;
 extern crate dot;
 
 pub mod prelude;
+pub mod module;
 pub mod core;
 
 use std::process::{Command, Stdio};
 use std::io::{self, Write, Read};
 use std::path::Path;
 use std::fs::{self, File};
-use std::ffi::OsStr;
+use std::ffi::{OsStr, OsString};
 use std::rc::Rc;
 
 use syntex_errors::emitter::ColorConfig;
@@ -45,6 +45,7 @@ use syntex_syntax::{ast, ptr};
 
 use walkdir::WalkDir;
 use core::ListItem;
+use module::Module;
 
 /// The default name of *graph/dot* file.
 pub const DEFAULT_NAME_DOT: &'static str = "ml.dot";
@@ -64,9 +65,13 @@ fn file2crate<P: AsRef<Path>>(path: P) -> io::Result<ast::Crate> {
 }
 
 /// The function `items2chars` returns a graph formated for *Graphiz/Dot*.
-fn items2chars(list: Vec<ptr::P<ast::Item>>) -> io::Result<Vec<u8>> {
+fn items2chars<'a>(modules: Vec<Module>) -> io::Result<Vec<u8>> {
     let mut f: Vec<u8> = Vec::new();
-    let it: ListItem = ListItem::from(list.iter().peekable());
+    let itt: Vec<(ptr::P<ast::Item>, Rc<Vec<OsString>>)> =
+        modules.into_iter()
+               .flat_map(|s: Module| s.into_iter())
+               .collect::<Vec<(ptr::P<ast::Item>, Rc<Vec<OsString>>)>>();
+    let it: ListItem = ListItem::from(itt.as_slice().into_iter().peekable());
 
     dot::render(&it, &mut f).and_then(|()| Ok(f))
 }
@@ -81,8 +86,8 @@ fn items2chars(list: Vec<ptr::P<ast::Item>>) -> io::Result<Vec<u8>> {
 ///     let _ = mml::rs2dot("src/lib.rs");
 /// }
 /// ```
-pub fn rs2dot<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>> {
-    file2crate(path).and_then(|parse: ast::Crate| items2chars(parse.module.items))
+pub fn rs2dot<'a, P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>> {
+    file2crate(path.as_ref()).and_then(|parse: ast::Crate| items2chars(vec![Module::from((parse.module.items, path.as_ref().to_path_buf()))]))
 }
 
 /// The function `src2dot` returns graphed repository of modules.
@@ -95,7 +100,7 @@ pub fn rs2dot<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>> {
 ///     let _ = mml::src2dot("src");
 /// }
 /// ```
-pub fn src2dot<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>> {
+pub fn src2dot<'a, P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>> {
     items2chars(WalkDir::new(path).into_iter()
                                  .filter_map(|entry: Result<walkdir::DirEntry, _>| entry.ok())
                                  .filter(|entry| entry.file_type().is_file())
@@ -103,13 +108,12 @@ pub fn src2dot<P: AsRef<Path>>(path: P) -> io::Result<Vec<u8>> {
                                      let path: &Path = entry.path();
 
                                      if path.extension().eq(&Some(OsStr::new("rs"))) {
-                                         file2crate(path).ok().and_then(|parse| Some(parse.module.items))
+                                         file2crate(path).ok().and_then(|parse| Some(Module::from((parse.module.items, path.to_path_buf()))))
                                      } else {
                                          None
                                      }
                                  })
-                                 .collect::<Vec<Vec<ptr::P<ast::Item>>>>()
-                                 .concat())
+                                 .collect::<Vec<Module>>())
 }
 
 /// The function `content2svg` returns structured vector graphics content of modules.

@@ -2,6 +2,8 @@ use super::DEFAULT_FUNC;
 
 use std::ops::Deref;
 use std::fmt;
+use std::ffi::OsString;
+use std::rc::Rc;
 
 use ::syntex_syntax::print::pprust::{ty_to_string, arg_to_string};
 use ::syntex_syntax::symbol::InternedString;
@@ -14,7 +16,8 @@ use ::dot::escape_html;
 #[derive(Default, Debug, Clone, Eq, PartialEq)]
 pub struct Method <'a> {
     /// visibility, method's name, arguments, result.
-    func: Vec<(&'a ast::Visibility, InternedString, Vec<String>, Option<String>)>
+    func: Vec<(&'a ast::Visibility, InternedString, Vec<String>, Option<String>)>,
+    path: Rc<Vec<OsString>>,
 }
 
 impl <'a> Method <'a> {
@@ -37,17 +40,18 @@ impl <'a> Method <'a> {
     }
 }
 
-impl <'a> From<Vec<(&'a ast::Visibility, InternedString, Vec<String>, Option<String>)>> for Method<'a> {
-    fn from(func: Vec<(&'a ast::Visibility, InternedString, Vec<String>, Option<String>)>) -> Method<'a> {
+impl <'a> From<(Vec<(&'a ast::Visibility, InternedString, Vec<String>, Option<String>)>, Rc<Vec<OsString>>)> for Method<'a> {
+    fn from((func, path): (Vec<(&'a ast::Visibility, InternedString, Vec<String>, Option<String>)>, Rc<Vec<OsString>>)) -> Method<'a> {
         Method {
             func: func,
+            path: path,
         }
     }
 }
 
-impl <'a> From<&'a Vec<ast::ImplItem>> for Method<'a> {
-    fn from(impl_item: &'a Vec<ast::ImplItem>) -> Method<'a> {
-        Method::from(impl_item.iter()
+impl <'a> From<(&'a Vec<ast::ImplItem>, Rc<Vec<OsString>>)> for Method<'a> {
+    fn from((impl_item, path): (&'a Vec<ast::ImplItem>, Rc<Vec<OsString>>)) -> Method<'a> {
+        Method::from((impl_item.iter()
                               .filter_map(|&ast::ImplItem {id: _, ident: ast::Ident { name, ..}, ref vis, defaultness: _, attrs: _, ref node, .. }| {
                                      if let &ast::ImplItemKind::Method(ast::MethodSig {unsafety: _, constness: _, abi: _, ref decl, ..}, _) = node {
                                          if let &ast::FnDecl {ref inputs, output: ast::FunctionRetTy::Ty(ref ty), ..} = decl.deref() {
@@ -61,7 +65,8 @@ impl <'a> From<&'a Vec<ast::ImplItem>> for Method<'a> {
                                          None
                                      }
                                })
-                               .collect::<Vec<(&'a ast::Visibility, InternedString, Vec<String>, Option<String>)>>())
+                               .collect::<Vec<(&'a ast::Visibility, InternedString, Vec<String>, Option<String>)>>(),
+                      path))
     }
 }
 
