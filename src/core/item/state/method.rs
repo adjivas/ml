@@ -2,12 +2,13 @@ use super::DEFAULT_FUNC;
 
 use std::ops::Deref;
 use std::fmt;
-use std::ffi::OsString;
 use std::rc::Rc;
 
 use ::syntex_syntax::print::pprust::{ty_to_string, arg_to_string};
 use ::syntex_syntax::symbol::InternedString;
 use ::syntex_syntax::ast;
+
+use ::module::path::ModulePath;
 
 use ::dot::escape_html;
 
@@ -17,7 +18,7 @@ use ::dot::escape_html;
 pub struct Method <'a> {
     /// visibility, method's name, arguments, result.
     func: Vec<(&'a ast::Visibility, InternedString, Vec<String>, Option<String>)>,
-    path: Rc<Vec<OsString>>,
+    path: Rc<ModulePath>,
 }
 
 impl <'a> Method <'a> {
@@ -40,8 +41,8 @@ impl <'a> Method <'a> {
     }
 }
 
-impl <'a> From<(Vec<(&'a ast::Visibility, InternedString, Vec<String>, Option<String>)>, Rc<Vec<OsString>>)> for Method<'a> {
-    fn from((func, path): (Vec<(&'a ast::Visibility, InternedString, Vec<String>, Option<String>)>, Rc<Vec<OsString>>)) -> Method<'a> {
+impl <'a> From<(Vec<(&'a ast::Visibility, InternedString, Vec<String>, Option<String>)>, Rc<ModulePath>)> for Method<'a> {
+    fn from((func, path): (Vec<(&'a ast::Visibility, InternedString, Vec<String>, Option<String>)>, Rc<ModulePath>)) -> Method<'a> {
         Method {
             func: func,
             path: path,
@@ -49,8 +50,8 @@ impl <'a> From<(Vec<(&'a ast::Visibility, InternedString, Vec<String>, Option<St
     }
 }
 
-impl <'a> From<(&'a Vec<ast::ImplItem>, Rc<Vec<OsString>>)> for Method<'a> {
-    fn from((impl_item, path): (&'a Vec<ast::ImplItem>, Rc<Vec<OsString>>)) -> Method<'a> {
+impl <'a> From<(&'a Vec<ast::ImplItem>, Rc<ModulePath>)> for Method<'a> {
+    fn from((impl_item, path): (&'a Vec<ast::ImplItem>, Rc<ModulePath>)) -> Method<'a> {
         Method::from((impl_item.iter()
                               .filter_map(|&ast::ImplItem {id: _, ident: ast::Ident { name, ..}, ref vis, defaultness: _, attrs: _, ref node, .. }| {
                                      if let &ast::ImplItemKind::Method(ast::MethodSig {unsafety: _, constness: _, abi: _, ref decl, ..}, _) = node {

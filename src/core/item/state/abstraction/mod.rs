@@ -4,11 +4,12 @@ pub mod enumerate;
 
 use std::fmt;
 use std::vec;
-use std::ffi::OsString;
 use std::rc::Rc;
 
 use ::syntex_syntax::symbol;
 use ::core::ast;
+
+use ::module::path::ModulePath;
 
 use self::extend::Trait;
 use self::structure::Struct;
@@ -73,20 +74,20 @@ impl <'a> Default for Abstract<'a> {
     }
 }
 
-impl <'a>From<((&'a ast::Item, &'a Vec<ast::TyParam>, &'a Vec<ast::TraitItem>), Rc<Vec<OsString>>)> for Abstract<'a> {
-    fn from(arguments: ((&'a ast::Item, &'a Vec<ast::TyParam>, &'a Vec<ast::TraitItem>), Rc<Vec<OsString>>)) -> Abstract<'a> {
+impl <'a>From<((&'a ast::Item, &'a Vec<ast::TyParam>, &'a Vec<ast::TraitItem>), Rc<ModulePath>)> for Abstract<'a> {
+    fn from(arguments: ((&'a ast::Item, &'a Vec<ast::TyParam>, &'a Vec<ast::TraitItem>), Rc<ModulePath>)) -> Abstract<'a> {
         Abstract::Trait(Trait::from(arguments))
     }
 }
 
-impl <'a>From<((&'a ast::Item, &'a Vec<ast::StructField>), Rc<Vec<OsString>>)> for Abstract<'a> {
-    fn from(arguments: ((&'a ast::Item, &'a Vec<ast::StructField>), Rc<Vec<OsString>>)) -> Abstract<'a> {
+impl <'a>From<((&'a ast::Item, &'a Vec<ast::StructField>), Rc<ModulePath>)> for Abstract<'a> {
+    fn from(arguments: ((&'a ast::Item, &'a Vec<ast::StructField>), Rc<ModulePath>)) -> Abstract<'a> {
         Abstract::Struct(Struct::from(arguments))
     }
 }
 
-impl <'a>From<((&'a ast::Item, &'a Vec<ast::TyParam>, &'a Vec<ast::Variant>), Rc<Vec<OsString>>)> for Abstract<'a> {
-    fn from(arguments: ((&'a ast::Item, &'a Vec<ast::TyParam>, &'a Vec<ast::Variant>), Rc<Vec<OsString>>)) -> Abstract<'a> {
+impl <'a>From<((&'a ast::Item, &'a Vec<ast::TyParam>, &'a Vec<ast::Variant>), Rc<ModulePath>)> for Abstract<'a> {
+    fn from(arguments: ((&'a ast::Item, &'a Vec<ast::TyParam>, &'a Vec<ast::Variant>), Rc<ModulePath>)) -> Abstract<'a> {
         Abstract::Enum(Enum::from(arguments))
     }
 }

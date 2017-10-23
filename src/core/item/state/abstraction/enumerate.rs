@@ -1,9 +1,10 @@
 use std::fmt;
-use std::ffi::OsString;
 use std::rc::Rc;
 
 use ::syntex_syntax::print::pprust::ty_to_string;
 use ::syntex_syntax::{codemap, symbol, ast};
+
+use ::module::path::ModulePath;
 
 use ::dot::escape_html;
 
@@ -11,7 +12,7 @@ use ::dot::escape_html;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Enum<'a> {
-    pub path: Rc<Vec<OsString>>,
+    pub path: Rc<ModulePath>,
     /// Visibility
     pub vis: &'a ast::Visibility,
     pub name: symbol::InternedString,
@@ -19,8 +20,8 @@ pub struct Enum<'a> {
     pub variants: Vec<(symbol::InternedString, Vec<String>)>,
 }
 
-impl <'a>From<((&'a ast::Item, &'a Vec<ast::TyParam>, &'a Vec<ast::Variant>), Rc<Vec<OsString>>)> for Enum<'a> {
-    fn from(((item, ty_params, variants), path): ((&'a ast::Item, &'a Vec<ast::TyParam>, &'a Vec<ast::Variant>), Rc<Vec<OsString>>)) -> Enum<'a> {
+impl <'a>From<((&'a ast::Item, &'a Vec<ast::TyParam>, &'a Vec<ast::Variant>), Rc<ModulePath>)> for Enum<'a> {
+    fn from(((item, ty_params, variants), path): ((&'a ast::Item, &'a Vec<ast::TyParam>, &'a Vec<ast::Variant>), Rc<ModulePath>)) -> Enum<'a> {
         Enum {
             path: path,
             vis: &item.vis,

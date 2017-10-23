@@ -33,7 +33,7 @@ use std::process::{Command, Stdio};
 use std::io::{self, Write, Read};
 use std::path::Path;
 use std::fs::{self, File};
-use std::ffi::{OsStr, OsString};
+use std::ffi::OsStr;
 use std::rc::Rc;
 
 use syntex_errors::emitter::ColorConfig;
@@ -46,6 +46,7 @@ use syntex_syntax::{ast, ptr};
 use walkdir::WalkDir;
 use core::ListItem;
 use module::Module;
+use module::path::ModulePath;
 
 /// The default name of *graph/dot* file.
 pub const DEFAULT_NAME_DOT: &'static str = "ml.dot";
@@ -67,10 +68,10 @@ fn file2crate<P: AsRef<Path>>(path: P) -> io::Result<ast::Crate> {
 /// The function `items2chars` returns a graph formated for *Graphiz/Dot*.
 fn items2chars<'a>(modules: Vec<Module>) -> io::Result<Vec<u8>> {
     let mut f: Vec<u8> = Vec::new();
-    let itt: Vec<(ptr::P<ast::Item>, Rc<Vec<OsString>>)> =
+    let itt: Vec<(ptr::P<ast::Item>, Rc<ModulePath>)> =
         modules.into_iter()
                .flat_map(|s: Module| s.into_iter())
-               .collect::<Vec<(ptr::P<ast::Item>, Rc<Vec<OsString>>)>>();
+               .collect::<Vec<(ptr::P<ast::Item>, Rc<ModulePath>)>>();
     let it: ListItem = ListItem::from(itt.as_slice().into_iter().peekable());
 
     dot::render(&it, &mut f).and_then(|()| Ok(f))

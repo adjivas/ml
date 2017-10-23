@@ -1,16 +1,17 @@
 use std::fmt;
 use std::ops::Deref;
-use std::ffi::OsString;
 use std::rc::Rc;
 
 use ::syntex_syntax::print::pprust::ty_to_string;
 use ::syntex_syntax::{symbol, ast};
 
+use ::module::path::ModulePath;
+
 use ::dot::escape_html;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Trait<'a> {
-    pub path: Rc<Vec<OsString>>,
+    pub path: Rc<ModulePath>,
     /// Visibility
     pub vis: &'a ast::Visibility,
     pub name: symbol::InternedString,
@@ -18,8 +19,8 @@ pub struct Trait<'a> {
     pub items: Vec<(symbol::InternedString, Vec<String>, String)>,
 }
 
-impl <'a>From<((&'a ast::Item, &'a Vec<ast::TyParam>, &'a Vec<ast::TraitItem>), Rc<Vec<OsString>>)> for Trait<'a> {
-    fn from(((item, ty_params, trait_item), path): ((&'a ast::Item, &'a Vec<ast::TyParam>, &'a Vec<ast::TraitItem>), Rc<Vec<OsString>>)) -> Trait<'a> {
+impl <'a>From<((&'a ast::Item, &'a Vec<ast::TyParam>, &'a Vec<ast::TraitItem>), Rc<ModulePath>)> for Trait<'a> {
+    fn from(((item, ty_params, trait_item), path): ((&'a ast::Item, &'a Vec<ast::TyParam>, &'a Vec<ast::TraitItem>), Rc<ModulePath>)) -> Trait<'a> {
         Trait {
             path: path,
             vis: &item.vis,

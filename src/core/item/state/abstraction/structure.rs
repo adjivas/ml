@@ -1,9 +1,10 @@
 use std::fmt;
-use std::ffi::OsString;
 use std::rc::Rc;
 
 use ::syntex_syntax::print::pprust::ty_to_string;
 use ::syntex_syntax::{symbol, ast};
+
+use ::module::path::ModulePath;
 
 use ::dot::escape_html;
 
@@ -11,15 +12,15 @@ use ::dot::escape_html;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Struct<'a> {
-    pub path: Rc<Vec<OsString>>,
+    pub path: Rc<ModulePath>,
     /// Visibility
     pub vis: &'a ast::Visibility,
     pub name: symbol::InternedString,
     pub fields: Vec<(&'a ast::Visibility, symbol::InternedString, String)>,
 }
 
-impl <'a>From<((&'a ast::Item, &'a Vec<ast::StructField>), Rc<Vec<OsString>>)> for Struct<'a> {
-    fn from(((item, struct_field), path): ((&'a ast::Item, &'a Vec<ast::StructField>), Rc<Vec<OsString>>)) -> Struct<'a> {
+impl <'a>From<((&'a ast::Item, &'a Vec<ast::StructField>), Rc<ModulePath>)> for Struct<'a> {
+    fn from(((item, struct_field), path): ((&'a ast::Item, &'a Vec<ast::StructField>), Rc<ModulePath>)) -> Struct<'a> {
         Struct {
             path: path,
             vis: &item.vis,
